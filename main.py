@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import sys
 from classes import Board
 
 def initialize_game(human_pl1,human_pl2,winning_points):
@@ -8,6 +9,7 @@ def initialize_game(human_pl1,human_pl2,winning_points):
 
 def evaluate_actions(actions,board): ###DUMMY EVAL FUNC
     return random.choice(random.choice(actions))
+
 if __name__ == "__main__":
     pl1_human,pl2_human = False,True
     winning_points = 10
@@ -31,6 +33,8 @@ if __name__ == "__main__":
                         human_input = input("Choose piece, and option (format: 'piece,action'))").split(",")
                         chosen_action = actions[int(human_input[0])][int(human_input[1])]
                         break
+                    except KeyboardInterrupt:
+                        sys.exit("Keyboard interrupt")
                     except:
                         pass
 
@@ -45,7 +49,3 @@ if __name__ == "__main__":
             print("No available moves, player {} looses!".format(board.pl_turn))
         else:
             old_player_cannot_move = current_player_cannot_move
-
-
-
-
