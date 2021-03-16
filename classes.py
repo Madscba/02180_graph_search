@@ -60,9 +60,112 @@ class Board():
         if action[-1]:
             self.pl_scores[self.pl_turn] +=1
 
+    def r_update_state(self,action):
+        #(old pos, new pos, move type,score)
+        #update board
+        self.r_update_pos(action)
+        #update piece and score
+        self.r_update_piece_and_player(action)
+        #update score
+        self.r_update_score(action)
+
+    def r_update_pos(self,action):
+        pl_idx = self.pl_turn
+        if action[0] != None:
+            self.state[action[0]] = 0
+        if action[1] != None:
+            self.state[action[1]] = self.pl[pl_idx].pieces[action[3]]
+
+
+    def r_update_piece_and_player(self,action):
+        pl_idx = self.pl_turn
+        if action[2] =='Attack':
+            self.state[action[1]].on_board = False
+            self.state[action[1]].pos = None
+            self.pl[int(not bool(pl_idx))].piece_count +=1
+        if action[0] == None:
+            self.pl[pl_idx].pieces[action[3]].on_board = True
+            self.pl[pl_idx].pieces[action[3]].pos = action[1]
+            self.pl[pl_idx].piece_count -=1
+        elif action[1] == None:
+            self.pl[pl_idx].pieces[action[3]].on_board = False
+            self.pl[pl_idx].pieces[action[3]].pos = None
+            self.pl[pl_idx].piece_count += 1
+        else:
+            self.pl[pl_idx].pieces[action[3]].pos = action[1]
+
+    def r_update_score(self,action):
+        if action[-1]:
+            self.pl_scores[self.pl_turn] +=1
+
+
+
+
 
     def terminal_test(self):
         return self.wining_score in self.pl_scores
+
+    def max_alpha_beta(self, alpha, beta, n_depth):
+        maxv = -100000 #VERY SMALL
+        action = None
+
+        terminal = self.terminal_test()
+        if terminal:
+            return (maxv, None) #If game is done, then AI lost
+        if n_depth==0:
+            return (eval_state(self.state,self.pl_scores),None) #Eval_state not implemented. Could just be a self.eval_state that doesnt need inputs.
+        
+        actions = self.pl[self.pl_turn].get_actions(self)
+
+        for act in actions: #For all available actions at this point
+            self.update_state(act) #Update the state. 
+            m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1) 
+
+            if m > maxv: #Best action so far
+                maxv = m 
+                action = act
+            self.r_update_state(act) #Yet to be implemented
+
+
+            if maxv >= beta:
+                return (maxv, action)
+            
+            if maxv > alpha:
+                alpha = maxv
+        return (maxv, action)
+
+    def min_alpha_beta(self, alpha, beta, n_depth):
+        minv = 100000 #VERY LARGE
+        action = None
+
+        terminal = self.terminal_test()
+        if terminal:
+            return (minv, None) #If game is done, then AI won
+        if n_depth==0:
+            return (eval_state(self.state,self.pl_scores),None) #Eval_state not implemented. Could just be a self.eval_state that doesnt need inputs.
+        
+        actions = self.pl[self.pl_turn].get_actions(self)
+
+        for act in actions: #For all available actions at this point
+            self.update_state(act) #Update the state. 
+            m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1) 
+
+            if m < minv: #Best action so far
+                minv = m 
+                action = act
+            self.r_update_state(act) #Yet to be implemented
+
+
+            if minv <= alpha:
+                return (minv, action)
+            
+            if minv < beta:
+                beta = minv
+        return (minv, action)
+
+
+
+
 
 
 class Player():
