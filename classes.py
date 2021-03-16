@@ -69,7 +69,7 @@ class Board():
         #update score
         self.r_update_score(action)
 
-    def r_update_pos(self,action):
+    def r_update_pos(self,action): #YET TO BE IMPLEMENTED
         pl_idx = self.pl_turn
         if action[0] != None:
             self.state[action[0]] = 0
@@ -77,7 +77,7 @@ class Board():
             self.state[action[1]] = self.pl[pl_idx].pieces[action[3]]
 
 
-    def r_update_piece_and_player(self,action):
+    def r_update_piece_and_player(self,action):  #YET TO BE IMPLEMENTED
         pl_idx = self.pl_turn
         if action[2] =='Attack':
             self.state[action[1]].on_board = False
@@ -94,12 +94,17 @@ class Board():
         else:
             self.pl[pl_idx].pieces[action[3]].pos = action[1]
 
-    def r_update_score(self,action):
+    def r_update_score(self,action):  #YET TO BE IMPLEMENTED
         if action[-1]:
             self.pl_scores[self.pl_turn] +=1
 
 
 
+    def eval_state(self): #YET TO BE IMPLEMENTED
+        board = self.state
+        scores = self.pl_scores
+        value = 100 #Eval function based on board and pieces
+        return value
 
 
     def terminal_test(self):
@@ -142,7 +147,7 @@ class Board():
         if terminal:
             return (minv, None) #If game is done, then AI won
         if n_depth==0:
-            return (eval_state(self.state,self.pl_scores),None) #Eval_state not implemented. Could just be a self.eval_state that doesnt need inputs.
+            return (self.eval_state(),None) #Eval_state not implemented. Could just be a self.eval_state that doesnt need inputs.
         
         actions = self.pl[self.pl_turn].get_actions(self)
 
