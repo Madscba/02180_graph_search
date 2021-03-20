@@ -24,10 +24,10 @@ class Board():
 
     def update_state(self,action):
         #(old pos, new pos, move type,score)
+        # update piece and score
+        self.update_piece_and_player(action)
         #update board
         self.update_pos(action)
-        #update piece and score
-        self.update_piece_and_player(action)
         #update score
         self.update_score(action)
 
@@ -183,7 +183,9 @@ class Player():
     def get_actions(self,board):
         possible_actions = []
         for piece_idx,piece in enumerate(self.pieces):
-            possible_actions += piece.get_actions(board)
+            actions = piece.get_actions(board)
+            if actions != []:
+                possible_actions.append(piece.get_actions(board))
         return possible_actions
 
     def initialize_pieces(self,pl_id):
@@ -212,21 +214,21 @@ class Piece():
         if self.on_board:
             actions = self.action_diag(board,bool)
             if actions != []:
-                all_actions.append(actions)
+                all_actions+= actions
             if not ( (self.pl_id == -1 and self.pos in [9, 10, 11]) or (self.pl_id == 1 and self.pos in [0, 1, 2]) ): #Piece is not at the opponents starting row
                 fw_idx = 3*(-self.pl_id)
                 if isinstance(board.state[self.pos+fw_idx], Piece):
                     if board.state[self.pos+fw_idx].pl_id != self.pl_id:
                         actions = self.action_attack(board, fw_idx)
                         if actions != []:
-                            all_actions.append(actions)
+                            all_actions += actions
                         actions = self.action_jump(board, fw_idx)
                         if actions != []:
-                            all_actions.append(actions)
+                            all_actions += actions
         else:
             actions = self.action_insert(board, bool)
             if actions != []:
-                all_actions.append(actions)
+                all_actions+= actions
 
         return all_actions
 
