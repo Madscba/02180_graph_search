@@ -54,7 +54,7 @@ class Board():
             self.state[action[1]].pos = None
             self.pl[int(not bool(pl_idx))].piece_count +=1
             if minimax_depth != -1:
-                self.minimax_dict[minimax_depth]["defender":(self.state[action[1]].piece_id,int(not bool(pl_idx)))] #Save piece_id of piece being attacked, and owner_id
+                self.minimax_dict[minimax_depth]["defender"] = (self.state[action[1]].piece_id,int(not bool(pl_idx))) #Save piece_id of piece being attacked, and owner_id
 
         if action[0] == None:
             self.pl[pl_idx].pieces[action[3]].on_board = True
@@ -73,6 +73,7 @@ class Board():
 
     def r_update_state(self,n_depth=-1):
         #Reverse update
+        print("reversing: ",self.minimax_dict[n_depth], "\n n_depth: ",n_depth)
         #update score
         self.r_update_score(n_depth)
         #update board
@@ -91,18 +92,19 @@ class Board():
         if action[1] != None:
              if action[2] == "Attack":
                  opponent_piece_id,opponent_pl_id = self.minimax_dict[n_depth]["defender"]
-                 self.state[action[0]] = self.pl[opponent_pl_id].pieces[opponent_piece_id]
+                 self.state[action[1]] = self.pl[opponent_pl_id].pieces[opponent_piece_id]
              else:
-                self.state[action[0]] = 0
+                self.state[action[1]] = 0
 
 
 
     def r_update_piece_and_player(self,n_depth=-1):  #YET TO BE IMPLEMENTED
+        
         action = self.minimax_dict[n_depth]['action']
         pl_idx = self.minimax_dict[n_depth]["player"]
-        opponent_piece_id, opponent_pl_id = self.minimax_dict[n_depth]["defender"]
 
         if action[2] == "Attack":
+            opponent_piece_id, opponent_pl_id = self.minimax_dict[n_depth]["defender"]
             removed_piece = self.pl[opponent_pl_id].pieces[opponent_piece_id]
             removed_piece.on_board = True
             removed_piece.pos = action[1]
@@ -174,7 +176,7 @@ class Board():
             if m > maxv: #Best action so far
                 maxv = m 
                 action = act
-            self.r_update_state(minimax_depth=n_depth) #Yet to be implemented
+            self.r_update_state(n_depth) #Yet to be implemented
 
 
             if maxv >= beta:
@@ -195,7 +197,7 @@ class Board():
             return (self.eval_state(self.pl_turn),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
-        print("Turn: ", self.pl_turn)
+        print(" \n Turn: ", self.pl_turn)
         print("min player: ",self.pl[self.pl_turn].get_actions(self))
         actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
         for act in actions: #For all available actions at this point
@@ -208,7 +210,7 @@ class Board():
             if m < minv: #Best action so far
                 minv = m 
                 action = act
-            self.r_update_state(act) #Yet to be implemented
+            self.r_update_state(n_depth) #Yet to be implemented
 
 
             if minv <= alpha:
