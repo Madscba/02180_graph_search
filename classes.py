@@ -127,25 +127,24 @@ class Board():
             self.pl_scores[pl_idx] -=1
 
 
-    def eval_state(self, pl_turn):
-        """Return an estimate of the expected utility of the board state for a player.
+    def eval_state(self):
+        """Return an estimate of the expected utility of the board state.
 
-        Note that negative values of utility are from the perspective of the given player.
-        (we could alternatively always return the same score for all players, with
-        negative value if MIN is winning, and positive value if MAX is winning)
+        Note that the value is a global evaluation for both players, negative 
+        values indicate that MIN is winning, and positives indicate that MAX is winning.
         """
-        if pl_turn not in [0, 1]:
-            raise ValueError('Unknown player "{}", valid players: [0,1]'.format(pl_turn))
-        score_balance = self.pl_scores[pl_turn] - self.pl_scores[(pl_turn + 1) % 2]
+        score_balance = self.pl_scores[1] - self.pl_scores[0]
         rows_advanced_weight = 0.95 # disincentivise advancing rows (compared to scoring)
         rows_advanced = 0
         for _, piece in enumerate(self.state):
             if piece: # non-empty cell
-                if piece.pl_id == self.pl_id[pl_turn]:
+                if piece.pl_id == 1:
                     rows_advanced += piece.distance_from_home()
-                else:
+                elif piece.pl_id == -1:
                     # substract points for the pieces of the other player
                     rows_advanced -= piece.distance_from_home()
+                else:
+                    raise ValueError('Unknown player "{}" in Piece, valid players: [0,1]'.format(piece.pl_id))
         return score_balance + rows_advanced_weight*(rows_advanced/(self.row_count+1))
 
     def terminal_test(self):
@@ -159,7 +158,7 @@ class Board():
         if terminal:
             return (maxv, None) #If game is done, then AI lost
         if n_depth==0:
-            return (self.eval_state(self.pl_turn),None)
+            return (self.eval_state(),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
@@ -189,7 +188,7 @@ class Board():
         if terminal:
             return (minv, None) #If game is done, then AI won
         if n_depth==0:
-            return (self.eval_state(self.pl_turn),None)
+            return (self.eval_state(),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
