@@ -14,6 +14,7 @@ class Board():
         self.pl_scores = [0,0]
         self.row_count = 4
         self.column_count = 3
+        self.minimax_dict = {}
 
     def display_board(self):
         display = np.zeros((12))
@@ -24,14 +25,18 @@ class Board():
                 display[idx] = 0
         print(display.reshape(4,3))
 
-    def update_state(self,action):
+    def update_state(self,action,minimax_depth=-1):
         #(old pos, new pos, move type,score)
+        # update piece and score
+        if minimax_depth != -1:
+            self.minimax_dict[minimax_depth]["action"] = action
+            self.minimax_dict[minimax_depth]["player"] = self.pl_turn
+        self.update_piece_and_player(action,minimax_depth)
         #update board
-        self.update_pos(action)
-        #update piece and score
-        self.update_piece_and_player(action)
+        self.update_pos(action,minimax_depth)
         #update score
-        self.update_score(action)
+        self.update_score(action,minimax_depth)
+
 
     def update_pos(self,action):
         pl_idx = self.pl_turn
@@ -40,13 +45,15 @@ class Board():
         if action[1] != None:
             self.state[action[1]] = self.pl[pl_idx].pieces[action[3]]
 
-
-    def update_piece_and_player(self,action):
+    def update_piece_and_player(self,action,minimax_depth=-1):
         pl_idx = self.pl_turn
         if action[2] =='Attack':
             self.state[action[1]].on_board = False
             self.state[action[1]].pos = None
             self.pl[int(not bool(pl_idx))].piece_count +=1
+            if minimax_depth != -1:
+                self.minimax_dict[minimax_depth]["defender":(self.state[action[1]].piece_id,int(not bool(pl_idx)))] #Save piece_id of piece being attacked, and owner_id
+
         if action[0] == None:
             self.pl[pl_idx].pieces[action[3]].on_board = True
             self.pl[pl_idx].pieces[action[3]].pos = action[1]
@@ -62,43 +69,58 @@ class Board():
         if action[-1]:
             self.pl_scores[self.pl_turn] +=1
 
-    def r_update_state(self,action):
-        #(old pos, new pos, move type,score)
-        #update board
-        self.r_update_pos(action)
-        #update piece and score
-        self.r_update_piece_and_player(action)
+    def r_update_state(self,n_depth=-1):
+        #Reverse update
         #update score
-        self.r_update_score(action)
+        self.r_update_score(n_depth)
+        #update board
+        self.r_update_pos(n_depth)
+        #update piece and score
+        self.r_update_piece_and_player(n_depth)
 
-    def r_update_pos(self,action): #YET TO BE IMPLEMENTED
-        pl_idx = self.pl_turn
+
+    def r_update_pos(self,n_depth=-1):
+        action = self.minimax_dict[n_depth]['action']
+        pl_idx = self.minimax_dict[n_depth]["player"]
         if action[0] != None:
-            self.state[action[0]] = 0
+            self.state[action[0]] = self.pl[pl_idx].pieces[action[3]]
         if action[1] != None:
-            self.state[action[1]] = self.pl[pl_idx].pieces[action[3]]
+             if action[2] == "Attack":
+                 opponent_piece_id,opponent_pl_id = self.minimax_dict[n_depth]["defender"]
+                 self.state[action[0]] = self.pl[opponent_pl_id].pieces[opponent_piece_id]
+             else:
+                self.state[action[0]] = 0
 
 
-    def r_update_piece_and_player(self,action):  #YET TO BE IMPLEMENTED
-        pl_idx = self.pl_turn
-        if action[2] =='Attack':
-            self.state[action[1]].on_board = False
-            self.state[action[1]].pos = None
-            self.pl[int(not bool(pl_idx))].piece_count +=1
+
+    def r_update_piece_and_player(self,n_depth=-1):  #YET TO BE IMPLEMENTED
+        action = self.minimax_dict[n_depth]['action']
+        pl_idx = self.minimax_dict[n_depth]["player"]
+        opponent_piece_id, opponent_pl_id = self.minimax_dict[n_depth]["defender"]
+
+        if action[2] == "Attack":
+            removed_piece = self.pl[opponent_pl_id].pieces[opponent_piece_id]
+            removed_piece.on_board = True
+            removed_piece.pos = action[1]
+            self.pl[opponent_pl_id].piece_count -= 1
+
         if action[0] == None:
-            self.pl[pl_idx].pieces[action[3]].on_board = True
-            self.pl[pl_idx].pieces[action[3]].pos = action[1]
-            self.pl[pl_idx].piece_count -=1
-        elif action[1] == None:
             self.pl[pl_idx].pieces[action[3]].on_board = False
             self.pl[pl_idx].pieces[action[3]].pos = None
-            self.pl[pl_idx].piece_count += 1
+            self.pl[pl_idx].piece_count +=1
+        elif action[1] == None:
+            self.pl[pl_idx].pieces[action[3]].on_board = True
+            self.pl[pl_idx].pieces[action[3]].pos = action[0]
+            self.pl[pl_idx].piece_count -= 1
         else:
-            self.pl[pl_idx].pieces[action[3]].pos = action[1]
+            self.pl[pl_idx].pieces[action[3]].pos = action[0]
 
-    def r_update_score(self,action):  #YET TO BE IMPLEMENTED
-        if action[-1]:
-            self.pl_scores[self.pl_turn] +=1
+    def r_update_score(self,n_depth=-1):
+        action = self.minimax_dict[n_depth]['action']
+        pl_idx = self.minimax_dict[n_depth]["player"]
+        if action[4]:
+            self.pl_scores[pl_idx] -=1
+
 
     def eval_state(self, pl_turn):
         """Return an estimate of the expected utility of the board state for a player.
@@ -137,13 +159,14 @@ class Board():
         actions = self.pl[self.pl_turn].get_actions(self)
 
         for act in actions: #For all available actions at this point
-            self.update_state(act) #Update the state. 
+            self.minimax_dict[n_depth] = {}
+            self.update_state(act,minimax_depth=n_depth) #Update the state.
             m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m > maxv: #Best action so far
                 maxv = m 
                 action = act
-            self.r_update_state(act) #Yet to be implemented
+            self.r_update_state(minimax_depth=n_depth) #Yet to be implemented
 
 
             if maxv >= beta:
@@ -166,7 +189,7 @@ class Board():
         actions = self.pl[self.pl_turn].get_actions(self)
 
         for act in actions: #For all available actions at this point
-            self.update_state(act) #Update the state. 
+            self.update_state(act,minimax=True) #Update the state.
             m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m < minv: #Best action so far
@@ -197,7 +220,9 @@ class Player():
     def get_actions(self,board):
         possible_actions = []
         for piece_idx,piece in enumerate(self.pieces):
-            possible_actions += piece.get_actions(board)
+            actions = piece.get_actions(board)
+            if actions != []:
+                possible_actions.append(piece.get_actions(board))
         return possible_actions
 
     def initialize_pieces(self,pl_id):
@@ -233,21 +258,21 @@ class Piece():
         if self.on_board:
             actions = self.action_diag(board,bool)
             if actions != []:
-                all_actions.append(actions)
+                all_actions+= actions
             if not ( (self.pl_id == -1 and self.pos in [9, 10, 11]) or (self.pl_id == 1 and self.pos in [0, 1, 2]) ): #Piece is not at the opponents starting row
                 fw_idx = 3*(-self.pl_id)
                 if isinstance(board.state[self.pos+fw_idx], Piece):
                     if board.state[self.pos+fw_idx].pl_id != self.pl_id:
                         actions = self.action_attack(board, fw_idx)
                         if actions != []:
-                            all_actions.append(actions)
+                            all_actions += actions
                         actions = self.action_jump(board, fw_idx)
                         if actions != []:
-                            all_actions.append(actions)
+                            all_actions += actions
         else:
             actions = self.action_insert(board, bool)
             if actions != []:
-                all_actions.append(actions)
+                all_actions+= actions
 
         return all_actions
 

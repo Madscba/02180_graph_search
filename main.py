@@ -11,7 +11,7 @@ def evaluate_actions(actions,board): ###DUMMY EVAL FUNC
     return random.choice(random.choice(actions))
 
 if __name__ == "__main__":
-    pl1_human,pl2_human = False,True
+    pl1_human,pl2_human = False,False
     winning_points = 10
 
     board = initialize_game(pl1_human,pl2_human,winning_points)
@@ -30,12 +30,13 @@ if __name__ == "__main__":
                 [print("{} piece: {} from {}  to {}".format(action[2],action[3]+1,action[0],action[1])) for piece_actions in actions for action in piece_actions ]
                 while True:
                     try:
-                        human_input = input("Choose piece, and option (format: 'piece,action'))").split(",")
+                        human_input = input("Choose piece, and option (0 for the first listed option) (format: 'piece,action'))").split(",")
                         chosen_action = actions[int(human_input[0])][int(human_input[1])]
                         break
                     except KeyboardInterrupt:
                         sys.exit("Keyboard interrupt")
                     except:
+                        print("Cannot perform action: ",int(human_input[0]),int(human_input[1]),actions)
                         pass
 
             board.update_state(chosen_action)
