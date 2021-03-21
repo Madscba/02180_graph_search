@@ -29,9 +29,9 @@ if __name__ == "__main__":
             current_player_cannot_move = False
             if cur_pl.human == False:
                 if cur_pl.pl_id == -1: #If player 1 then max the evaluation. Might be reverse. Check if AI is trying to lose :P
-                    value, chosen_action = board.max_alpha_beta(-1000,1000,6)
-                else:
                     value, chosen_action = board.min_alpha_beta(-1000,1000,6)
+                else:
+                    value, chosen_action = board.max_alpha_beta(-1000,1000,6)
 
             else:
                 [print("{} piece: {} from {}  to {}".format(action[2],action[3]+1,action[0],action[1])) for piece_actions in actions for action in piece_actions ]
