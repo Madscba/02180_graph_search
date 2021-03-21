@@ -168,7 +168,7 @@ class Board():
             print(act, n_depth)
             self.minimax_dict[n_depth] = {}
             self.update_state(act,minimax_depth=n_depth) #Update the state.
-            print(self.display_board())
+            self.display_board()
             m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m > maxv: #Best action so far
@@ -202,7 +202,7 @@ class Board():
             print(act, n_depth)
             self.minimax_dict[n_depth] = {}
             self.update_state(act,minimax_depth=n_depth) #Update the state.
-            print(self.display_board())
+            self.display_board()
             m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m < minv: #Best action so far
