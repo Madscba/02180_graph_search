@@ -12,6 +12,8 @@ class Board():
         self.pl_turn = 0 #[0 for player 1, 1 for player 2]
         self.wining_score = score
         self.pl_scores = [0,0]
+        self.row_count = 4
+        self.column_count = 3
         self.minimax_dict = {}
 
     def display_board(self):
@@ -120,14 +122,26 @@ class Board():
             self.pl_scores[pl_idx] -=1
 
 
+    def eval_state(self, pl_turn):
+        """Return an estimate of the expected utility of the board state for a player.
 
-
-    def eval_state(self): #YET TO BE IMPLEMENTED
-        board = self.state
-        scores = self.pl_scores
-        value = 100 #Eval function based on board and pieces
-        return value
-
+        Note that negative values of utility are from the perspective of the given player.
+        (we could alternatively always return the same score for all players, with
+        negative value if MIN is winning, and positive value if MAX is winning)
+        """
+        if pl_turn not in [0, 1]:
+            raise ValueError('Unknown player "{}", valid players: [0,1]'.format(pl_turn))
+        score_balance = self.pl_scores[pl_turn] - self.pl_scores[(pl_turn + 1) % 2]
+        rows_advanced_weight = 0.95 # disincentivise advancing rows (compared to scoring)
+        rows_advanced = 0
+        for _, piece in enumerate(self.state):
+            if piece: # non-empty cell
+                if piece.pl_id == self.pl_id[pl_turn]:
+                    rows_advanced += piece.distance_from_home()
+                else:
+                    # substract points for the pieces of the other player
+                    rows_advanced -= piece.distance_from_home()
+        return score_balance + rows_advanced_weight*(rows_advanced/(self.row_count+1))
 
     def terminal_test(self):
         return self.wining_score in self.pl_scores
@@ -140,7 +154,7 @@ class Board():
         if terminal:
             return (maxv, None) #If game is done, then AI lost
         if n_depth==0:
-            return (eval_state(self.state,self.pl_scores),None) #Eval_state not implemented. Could just be a self.eval_state that doesnt need inputs.
+            return (self.eval_state(self.pl_turn),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
 
@@ -170,7 +184,7 @@ class Board():
         if terminal:
             return (minv, None) #If game is done, then AI won
         if n_depth==0:
-            return (self.eval_state(),None) #Eval_state not implemented. Could just be a self.eval_state that doesnt need inputs.
+            return (self.eval_state(self.pl_turn),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
 
@@ -226,6 +240,13 @@ class Piece():
     def update_pos(self,pos):
         self.pos = pos
 
+    def distance_from_home(self, row_count=4, column_count=3):
+        """Return the distance (in rows) from the cell to the player's home."""
+        row = self.pos//column_count
+        if self.pl_id == -1: # XXX IDs could be the other way around, needs testing
+            return row + 1
+        elif self.pl_id == 1:
+            return row_count - row
 
     def get_actions(self, board):
         # Every move is a tuple containing (current pos, new pos, type of move, piece_id,score) #None means piece is not on board
