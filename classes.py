@@ -73,7 +73,6 @@ class Board():
 
     def r_update_state(self,n_depth=-1):
         #Reverse update
-        print("reversing: ",self.minimax_dict[n_depth], "\n n_depth: ",n_depth)
         #update score
         self.r_update_score(n_depth)
         #update board
@@ -163,20 +162,16 @@ class Board():
             return (self.eval_state(self.pl_turn),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
-        print("Turn: ", self.pl_turn)
-        print("max player: ",self.pl[self.pl_turn].get_actions(self))
         actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
         for act in actions: #For all available actions at this point
-            print(act, n_depth)
             self.minimax_dict[n_depth] = {}
             self.update_state(act,minimax_depth=n_depth) #Update the state.
-            self.display_board()
             m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m > maxv: #Best action so far
                 maxv = m 
                 action = act
-            self.r_update_state(n_depth) #Yet to be implemented
+            self.r_update_state(n_depth)
 
 
             if maxv >= beta:
@@ -197,20 +192,16 @@ class Board():
             return (self.eval_state(self.pl_turn),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
-        print(" \n Turn: ", self.pl_turn)
-        print("min player: ",self.pl[self.pl_turn].get_actions(self))
         actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
         for act in actions: #For all available actions at this point
-            print(act, n_depth)
             self.minimax_dict[n_depth] = {}
             self.update_state(act,minimax_depth=n_depth) #Update the state.
-            self.display_board()
             m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m < minv: #Best action so far
                 minv = m 
                 action = act
-            self.r_update_state(n_depth) #Yet to be implemented
+            self.r_update_state(n_depth)
 
 
             if minv <= alpha:
