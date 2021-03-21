@@ -33,9 +33,11 @@ class Board():
             self.minimax_dict[minimax_depth]["player"] = self.pl_turn
         self.update_piece_and_player(action,minimax_depth)
         #update board
-        self.update_pos(action,minimax_depth)
+        self.update_pos(action)
         #update score
-        self.update_score(action,minimax_depth)
+        self.update_score(action)
+        #update turn
+        self.pl_turn = (self.pl_turn + 1) % 2
 
 
     def update_pos(self,action):
@@ -77,6 +79,8 @@ class Board():
         self.r_update_pos(n_depth)
         #update piece and score
         self.r_update_piece_and_player(n_depth)
+        #update turn
+        self.pl_turn = (self.pl_turn + 1) % 2
 
 
     def r_update_pos(self,n_depth=-1):
@@ -157,10 +161,14 @@ class Board():
             return (self.eval_state(self.pl_turn),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
-
+        print("Turn: ", self.pl_turn)
+        print("max player: ",self.pl[self.pl_turn].get_actions(self))
+        actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
         for act in actions: #For all available actions at this point
+            print(act, n_depth)
             self.minimax_dict[n_depth] = {}
             self.update_state(act,minimax_depth=n_depth) #Update the state.
+            print(self.display_board())
             m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m > maxv: #Best action so far
@@ -187,9 +195,14 @@ class Board():
             return (self.eval_state(self.pl_turn),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
-
+        print("Turn: ", self.pl_turn)
+        print("min player: ",self.pl[self.pl_turn].get_actions(self))
+        actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
         for act in actions: #For all available actions at this point
-            self.update_state(act,minimax=True) #Update the state.
+            print(act, n_depth)
+            self.minimax_dict[n_depth] = {}
+            self.update_state(act,minimax_depth=n_depth) #Update the state.
+            print(self.display_board())
             m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m < minv: #Best action so far

@@ -31,6 +31,7 @@ if __name__ == "__main__":
                     value, chosen_action = board.max_alpha_beta(-1000,1000,6)
                 else:
                     value, chosen_action = board.min_alpha_beta(-1000,1000,6)
+                input("Press enter to progress")
             else:
                 [print("{} piece: {} from {}  to {}".format(action[2],action[3]+1,action[0],action[1])) for piece_actions in actions for action in piece_actions ]
                 while True:
@@ -48,7 +49,6 @@ if __name__ == "__main__":
             current_player_cannot_move = True
         #[print(i,": ",type(ele)) for i,ele in enumerate(board.state)]
         print("Score: {}".format(board.pl_scores))
-        board.pl_turn = (board.pl_turn + 1) % 2
         if old_player_cannot_move and current_player_cannot_move:
             avaiable_moves = False
             print("No available moves, player {} looses!".format(board.pl_turn))
