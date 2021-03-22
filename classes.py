@@ -28,14 +28,15 @@ class Board():
     def update_state(self,action,minimax_depth=-1):
         #(old pos, new pos, move type,score)
         # update piece and score
-        if minimax_depth != -1:
-            self.minimax_dict[minimax_depth]["action"] = action
-            self.minimax_dict[minimax_depth]["player"] = self.pl_turn
-        self.update_piece_and_player(action,minimax_depth)
-        #update board
-        self.update_pos(action)
-        #update score
-        self.update_score(action)
+        if action is not None:
+            if minimax_depth != -1:
+                self.minimax_dict[minimax_depth]["action"] = action
+                self.minimax_dict[minimax_depth]["player"] = self.pl_turn
+            self.update_piece_and_player(action,minimax_depth)
+            #update board
+            self.update_pos(action)
+            #update score
+            self.update_score(action)
         #update turn
         self.pl_turn = (self.pl_turn + 1) % 2
 
@@ -148,29 +149,49 @@ class Board():
         return score_balance + rows_advanced_weight*(rows_advanced/(self.row_count+1))
 
     def terminal_test(self):
-        return self.wining_score in self.pl_scores
+        gridlock_win = self.pl[0].get_actions(self) == [] and self.pl[1].get_actions(self) == [] #If the actions of both pl1 and pl2 is None at the current state
+        score_win = self.wining_score in self.pl_scores
+        return (gridlock_win, score_win)
 
     def max_alpha_beta(self, alpha, beta, n_depth):
         maxv = -100000 #VERY SMALL
         action = None
 
         terminal = self.terminal_test()
-        if terminal:
-            return (maxv, None) #If game is done, then AI lost
+        if terminal[0]:
+            #print("Max terminal:")
+            #print(terminal)
+            #self.display_board()
+            return (-maxv, None) #If game is gridlocked, then Max won
+        if terminal[1]:
+            #print("Max terminal:")
+            #print(terminal)
+            #self.display_board()
+            return (maxv, None) #If game is won by score, then Max lost
         if n_depth==0:
             return (self.eval_state(),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
+        
+        if actions == []:
+            actions = [None]
         for act in actions: #For all available actions at this point
             self.minimax_dict[n_depth] = {}
             self.update_state(act,minimax_depth=n_depth) #Update the state.
+            #print(n_depth)
+            #self.display_board()
             m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1) 
+
 
             if m > maxv: #Best action so far
                 maxv = m 
                 action = act
-            self.r_update_state(n_depth)
+            
+            if act is None:
+                self.pl_turn = (self.pl_turn + 1) % 2
+            else:
+                self.r_update_state(n_depth)
 
 
             if maxv >= beta:
@@ -185,22 +206,38 @@ class Board():
         action = None
 
         terminal = self.terminal_test()
-        if terminal:
-            return (minv, None) #If game is done, then AI won
+        if terminal[0]:
+            #print("Min terminal:")
+            #print(terminal)
+            #self.display_board()
+            return (-minv, None) #If game is gridlocked, then Min won
+        if terminal[1]:
+            #print("Min terminal:")
+            #print(terminal)
+            #self.display_board()
+            return (minv, None) #If game is won by score, then Min lost
         if n_depth==0:
             return (self.eval_state(),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
+        if actions == []:
+            actions = [None]
         for act in actions: #For all available actions at this point
             self.minimax_dict[n_depth] = {}
             self.update_state(act,minimax_depth=n_depth) #Update the state.
+            #print(n_depth)
+            #self.display_board()
             m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m < minv: #Best action so far
                 minv = m 
                 action = act
-            self.r_update_state(n_depth)
+            
+            if act is None:
+                self.pl_turn = (self.pl_turn + 1) % 2
+            else:
+                self.r_update_state(n_depth)
 
 
             if minv <= alpha:
@@ -232,6 +269,8 @@ class Player():
 
     def initialize_pieces(self,pl_id):
         return [Piece(pl_id,i) for i in range(4)]
+    
+
 
 
 
