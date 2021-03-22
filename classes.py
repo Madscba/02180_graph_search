@@ -149,29 +149,40 @@ class Board():
         return score_balance + rows_advanced_weight*(rows_advanced/(self.row_count+1))
 
     def terminal_test(self):
-        gridlock_win = self.pl[0].get_actions(self) is None and self.pl[1].get_actions(self) is None #If the actions of both pl1 and pl2 is None at the current state
+        gridlock_win = self.pl[0].get_actions(self) == [] and self.pl[1].get_actions(self) == [] #If the actions of both pl1 and pl2 is None at the current state
         score_win = self.wining_score in self.pl_scores
-        return gridlock_win or score_win
+        return (gridlock_win, score_win)
 
     def max_alpha_beta(self, alpha, beta, n_depth):
         maxv = -100000 #VERY SMALL
         action = None
 
         terminal = self.terminal_test()
-        if terminal:
-            return (maxv, None) #If game is done, then Max lost
+        if terminal[0]:
+            #print("Max terminal:")
+            #print(terminal)
+            #self.display_board()
+            return (-maxv, None) #If game is gridlocked, then Max won
+        if terminal[1]:
+            #print("Max terminal:")
+            #print(terminal)
+            #self.display_board()
+            return (maxv, None) #If game is won by score, then Max lost
         if n_depth==0:
             return (self.eval_state(),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
         
-        if actions is None:
+        if actions == []:
             actions = [None]
         for act in actions: #For all available actions at this point
             self.minimax_dict[n_depth] = {}
             self.update_state(act,minimax_depth=n_depth) #Update the state.
+            #print(n_depth)
+            #self.display_board()
             m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1) 
+
 
             if m > maxv: #Best action so far
                 maxv = m 
@@ -195,18 +206,28 @@ class Board():
         action = None
 
         terminal = self.terminal_test()
-        if terminal:
-            return (minv, None) #If game is done, then Max won
+        if terminal[0]:
+            #print("Min terminal:")
+            #print(terminal)
+            #self.display_board()
+            return (-minv, None) #If game is gridlocked, then Min won
+        if terminal[1]:
+            #print("Min terminal:")
+            #print(terminal)
+            #self.display_board()
+            return (minv, None) #If game is won by score, then Min lost
         if n_depth==0:
             return (self.eval_state(),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
-        if actions is None:
+        if actions == []:
             actions = [None]
         for act in actions: #For all available actions at this point
             self.minimax_dict[n_depth] = {}
             self.update_state(act,minimax_depth=n_depth) #Update the state.
+            #print(n_depth)
+            #self.display_board()
             m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1) 
 
             if m < minv: #Best action so far

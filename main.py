@@ -13,24 +13,26 @@ def evaluate_actions(actions,board): ###DUMMY EVAL FUNC
 
 
 if __name__ == "__main__":
-    pl1_human,pl2_human = False,True
-    winning_points = 10
+    pl1_human,pl2_human = False,False
+    winning_points = 5
     value=0
     board = initialize_game(pl1_human,pl2_human,winning_points)
 
-    while not board.terminal_test():
+    while not any(board.terminal_test()):
         board.display_board()
         print("Value of last move: ",value)
 #        input("Press enter to progress")
+
         cur_pl = board.pl[board.pl_turn]
         actions = cur_pl.get_actions(board)
         if len(actions) != 0:
             current_player_cannot_move = False
             if cur_pl.human == False:
                 if cur_pl.pl_id == -1: 
-                    value, chosen_action = board.min_alpha_beta(-1000,1000,6)
+                    value, chosen_action = board.min_alpha_beta(-1000,1000,5)
                 else:
-                    value, chosen_action = board.max_alpha_beta(-1000,1000,6)
+                    value, chosen_action = board.max_alpha_beta(-1000,1000,5)
+
 
             else:
                 [print("{} piece: {} from {}  to {}".format(action[2],action[3]+1,action[0],action[1])) for piece_actions in actions for action in piece_actions ]
@@ -43,7 +45,11 @@ if __name__ == "__main__":
                         sys.exit("Keyboard interrupt")
                     except:
                         pass
-
-            board.update_state(chosen_action)
+        else:
+            chosen_action = None
+            value = "NA" 
+        board.update_state(chosen_action)
+        
             
         print("Score: {}".format(board.pl_scores))
+    print("Game done")
