@@ -14,7 +14,8 @@ def evaluate_actions(actions,board): ###DUMMY EVAL FUNC
 
 if __name__ == "__main__":
     pl1_human,pl2_human = False,False
-    winning_points = 5
+    pl1_depth,pl2_depth =10,10
+    winning_points = 15
     value=0
     board = initialize_game(pl1_human,pl2_human,winning_points)
 
@@ -29,11 +30,9 @@ if __name__ == "__main__":
             current_player_cannot_move = False
             if cur_pl.human == False:
                 if cur_pl.pl_id == -1: 
-                    value, chosen_action = board.min_alpha_beta(-1000,1000,5)
+                    value, chosen_action = board.min_alpha_beta(-1000,1000,pl1_depth)
                 else:
-                    value, chosen_action = board.max_alpha_beta(-1000,1000,5)
-
-
+                    value, chosen_action = board.max_alpha_beta(-1000,1000,pl2_depth)
             else:
                 [print("{} piece: {} from {}  to {}".format(action[2],action[3]+1,action[0],action[1])) for piece_actions in actions for action in piece_actions ]
                 while True:
@@ -47,7 +46,7 @@ if __name__ == "__main__":
                         pass
         else:
             chosen_action = None
-            value = "NA" 
+            value = "NA"
         board.update_state(chosen_action)
         
             

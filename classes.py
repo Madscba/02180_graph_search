@@ -15,6 +15,7 @@ class Board():
         self.row_count = 4
         self.column_count = 3
         self.minimax_dict = {}
+        self.action_evaluator = {"Attack": [0, 0], "Diag": [0, 0], "Jump": [0, 0], "Insert": [0, 0]}
 
     def display_board(self):
         display = np.zeros((12))
@@ -172,8 +173,7 @@ class Board():
             return (self.eval_state(),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
-        actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
-        
+        actions = self.moveOrdering([action for sublist in actions for action in sublist]) #Flatten the list of lists
         if actions == []:
             actions = [None]
         for act in actions: #For all available actions at this point
@@ -220,7 +220,7 @@ class Board():
             return (self.eval_state(),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
-        actions = [action for sublist in actions for action in sublist] #Flatten the list of lists
+        actions = self.moveOrdering([action for sublist in actions for action in sublist]) #Flatten and order the list of lists
         if actions == []:
             actions = [None]
         for act in actions: #For all available actions at this point
@@ -247,6 +247,9 @@ class Board():
                 beta = minv
         return (minv, action)
 
+    def moveOrdering(self,actions):
+        temp_action_list = sorted(list(zip([action[2] for action in actions],actions)))
+        return [action[1] for action in temp_action_list]
 
 
 
