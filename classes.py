@@ -249,12 +249,7 @@ class Player():
     def initialize_pieces(self,pl_id):
         return [Piece(pl_id,i) for i in range(4)]
     
-    def active_pieces(self):
-        on_board = 0
-        for piece in self.pieces:
-            if piece.on_board:
-                on_board +=1
-        return on_board
+
 
 
 
@@ -297,8 +292,7 @@ class Piece():
                         actions = self.action_jump(board, fw_idx)
                         if actions != []:
                             all_actions += actions
-        elif board.pl[self.pl_id].active_pieces() <3:
-        #else:
+        else:
             actions = self.action_insert(board, bool)
             if actions != []:
                 all_actions+= actions
