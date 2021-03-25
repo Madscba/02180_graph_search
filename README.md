@@ -1,17 +1,27 @@
-# Project One, Graph Search
+# Project One: Kulibrat Graph Search
 
 
-## Running locally
+## Running the game
 
-You first need to install `pipenv`: maybe `pip install pipenv` or maybe `sudo apt install pipenv`...
+First install pipenv
 
-```bash
-pipenv install # install deps
-pipenv shell # enter virtualenv
-python main.py # run
-
-# The UI will show you options
-# For the first action of Piece 1 type: 0,0
+```
+pip install --user pipenv
 ```
 
+Then you are ready to use this repo
+
+```bash
+cd /to/this/repo
+pipenv install   # to install deps
+pipenv shell     # to enter virtualenv
+python main.py   # to run the game
+```
+
+## Running benchmarks
+
+```bash
+pipenv shell          # to enter virtualenv
+python benchmark.py   # to run the benchmarks
+```
 
