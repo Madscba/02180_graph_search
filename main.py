@@ -10,18 +10,26 @@ def initialize_game(human_pl1,human_pl2,winning_points):
 def evaluate_actions(actions,board): ###DUMMY EVAL FUNC
     return random.choice(random.choice(actions))
 
+def run_game(pl1, pl2, winning_points, interactive=True):
+    pl1_human = pl1['type'] == 'human'
+    pl2_human = pl2['type'] == 'human'
+    pl1_depth = pl1.get('parameters', {}).get('depth', 6)
+    pl2_depth = pl2.get('parameters', {}).get('depth', 6)
 
-
-if __name__ == "__main__":
-    pl1_human,pl2_human = False,False
-    pl1_depth,pl2_depth =10,10
-    winning_points = 15
+    iteration_count = 0
     value=0
     board = initialize_game(pl1_human,pl2_human,winning_points)
 
-    while not any(board.terminal_test()):
-        board.display_board()
-        print("Value of last move: ",value)
+    while True:
+        iteration_count += 1
+        gridlock_winner, score_winner = board.terminal_test()
+        if any((gridlock_winner, score_winner)):
+            break
+        if iteration_count > winning_points**3:
+            raise RecursionError(f'MAX_ITERATIONS ({winning_points**3}) reached')
+        if interactive:
+            board.display_board()
+            print("Value of last move: ",value)
 #        input("Press enter to progress")
 
         cur_pl = board.pl[board.pl_turn]
@@ -30,9 +38,15 @@ if __name__ == "__main__":
             current_player_cannot_move = False
             if cur_pl.human == False:
                 if cur_pl.pl_id == -1: 
-                    value, chosen_action = board.min_alpha_beta(-1000,1000,pl1_depth)
+                    if pl1['type'] == 'random':
+                        value, chosen_action = None, evaluate_actions(actions, board)
+                    else:
+                        value, chosen_action = board.min_alpha_beta(-1000,1000,pl1_depth)
                 else:
-                    value, chosen_action = board.max_alpha_beta(-1000,1000,pl2_depth)
+                    if pl2['type'] == 'random':
+                        value, chosen_action = None, evaluate_actions(actions, board)
+                    else:
+                        value, chosen_action = board.max_alpha_beta(-1000,1000,pl2_depth)
             else:
                 [print("{} piece: {} from {}  to {}".format(action[2],action[3]+1,action[0],action[1])) for piece_actions in actions for action in piece_actions ]
                 while True:
@@ -49,6 +63,39 @@ if __name__ == "__main__":
             value = "NA"
         board.update_state(chosen_action)
         
-            
-        print("Score: {}".format(board.pl_scores))
-    print("Game done")
+        if interactive:
+            print("Score: {}".format(board.pl_scores))
+    if score_winner:
+        winner = score_winner
+    elif gridlock_winner:
+        winner = gridlock_winner
+    else:
+        raise RuntimeError('Cannot determine winner after game has finished')
+    return {
+        'winner': winner,
+        'scores': (board.pl_scores[0], board.pl_scores[1]),
+    }
+
+
+if __name__ == "__main__":
+    # pl1 = {
+    #     'name': 'human',
+    #     'type': 'human',
+    # }
+    pl1 = {
+        'name': 'hminimax',
+        'type': 'hminimax',
+        'parameters': {
+            'depth': 3,
+        }
+    }
+    pl2 = {
+        'name': 'hminimax',
+        'type': 'hminimax',
+        'parameters': {
+            'depth': 6,
+        }
+    }
+    winning_points = 10
+    result = run_game(pl1, pl2, winning_points)
+    print(f'Winner: {result["winner"]}, Scores: {result.get("scores")}')
