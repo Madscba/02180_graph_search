@@ -150,8 +150,17 @@ class Board():
         return score_balance + rows_advanced_weight*(rows_advanced/(self.row_count+1))
 
     def terminal_test(self):
-        gridlock_win = self.pl[0].get_actions(self) == [] and self.pl[1].get_actions(self) == [] #If the actions of both pl1 and pl2 is None at the current state
-        score_win = self.wining_score in self.pl_scores
+        gridlock_win, score_win = None, None
+        if self.pl[0].get_actions(self) == [] and self.pl[1].get_actions(self) == []:
+            #If the actions of both pl1 and pl2 is None at the current state
+            gridlock_win = self.pl_id[self.pl_turn] # Current player wins
+        if self.wining_score in self.pl_scores:
+            if self.pl_scores[self.pl_turn] > self.pl_scores[(self.pl_turn + 1) % 2]:
+                score_win = self.pl_id[self.pl_turn]
+            elif self.pl_scores[self.pl_turn] < self.pl_scores[(self.pl_turn + 1) % 2]:
+                score_win = self.pl_id[(self.pl_turn + 1) % 2]
+            else:
+                raise RuntimeError('Score inconsistency, both players have achieved winning_score')
         return (gridlock_win, score_win)
 
     def max_alpha_beta(self, alpha, beta, n_depth):
