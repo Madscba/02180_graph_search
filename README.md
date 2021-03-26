@@ -5,13 +5,13 @@
 
 You can run this project either with Docker or installing dependencies and running python.
 
-### With docker
+#### With docker
 
 ```
 docker-compose run --rm kulibrat
 ```
 
-### Python 3.8
+#### With your local python installation
 
 First install pipenv to manage dependencies:
 

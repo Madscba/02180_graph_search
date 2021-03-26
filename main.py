@@ -97,7 +97,14 @@ if __name__ == "__main__":
     #     }
     # }
     pl1 = {
-        'name': 'hminimax-depth3-e2',
+        'name': 'hminimax-depth3', # any string
+        'type': 'hminimax', # human | hminimax | random
+        'parameters': {     # dependant on player_type
+            'depth': 3,
+        }
+    }
+    pl2 = {
+        'name': 'hminimax-depth4',
         'type': 'hminimax',
         'parameters': {
             'depth': 4,
