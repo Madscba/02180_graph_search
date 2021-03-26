@@ -1,6 +1,6 @@
 import numpy as np
 class Board():
-    def __init__(self,pl1,pl2,score):
+    def __init__(self,pl1,pl2,score, pl1_params=None, pl2_params=None):
         """
         :param pl1: Boolean value, True for human, False for machine
         :param pl2: Boolean value, True for human, False for machine
@@ -12,6 +12,7 @@ class Board():
         self.pl_turn = 0 #[0 for player 1, 1 for player 2]
         self.wining_score = score
         self.pl_scores = [0,0]
+        self.pl_params = [pl1_params, pl2_params]
         self.row_count = 4
         self.column_count = 3
         self.minimax_dict = {}
@@ -129,14 +130,19 @@ class Board():
             self.pl_scores[pl_idx] -=1
 
 
-    def eval_state(self):
+    def eval_state(self, me=None):
         """Return an estimate of the expected utility of the board state.
-
-        Note that the value is a global evaluation for both players, negative 
-        values indicate that MIN is winning, and positives indicate that MAX is winning.
+        Return negative values if MIN is winning and positives if MAX does.
         """
         score_balance = self.pl_scores[1] - self.pl_scores[0]
-        rows_advanced_weight = 0.95 # disincentivise advancing rows (compared to scoring)
+        pl_params = self.pl_params[me] if me is not None else None
+        print(f'turn={self.pl_turn} me={me} params={pl_params}')
+        if not pl_params or pl_params.get('eval_type', 'default') == 'default':
+            rows_advanced_weight = 1.0
+            print(f'rows_advanced_weight = 1.0')
+        else: # default
+            rows_advanced_weight = 0.95 # disincentivise advancing rows (compared to scoring)
+            print('rows_advanced_weight = 0.95')
         rows_advanced = 0
         for _, piece in enumerate(self.state):
             if piece: # non-empty cell
@@ -163,7 +169,7 @@ class Board():
                 raise RuntimeError('Score inconsistency, both players have achieved winning_score')
         return (gridlock_win, score_win)
 
-    def max_alpha_beta(self, alpha, beta, n_depth):
+    def max_alpha_beta(self, alpha, beta, n_depth, me=None):
         maxv = -100000 #VERY SMALL
         action = None
 
@@ -179,7 +185,7 @@ class Board():
             #self.display_board()
             return (maxv, None) #If game is won by score, then Max lost
         if n_depth==0:
-            return (self.eval_state(),None)
+            return (self.eval_state(me=me),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = self.moveOrdering([action for sublist in actions for action in sublist]) #Flatten the list of lists
@@ -190,7 +196,7 @@ class Board():
             self.update_state(act,minimax_depth=n_depth) #Update the state.
             #print(n_depth)
             #self.display_board()
-            m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1) 
+            m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1, me=me) 
 
 
             if m > maxv: #Best action so far
@@ -210,7 +216,7 @@ class Board():
                 alpha = maxv
         return (maxv, action)
 
-    def min_alpha_beta(self, alpha, beta, n_depth):
+    def min_alpha_beta(self, alpha, beta, n_depth, me=None):
         minv = 100000 #VERY LARGE
         action = None
 
@@ -226,7 +232,7 @@ class Board():
             #self.display_board()
             return (minv, None) #If game is won by score, then Min lost
         if n_depth==0:
-            return (self.eval_state(),None)
+            return (self.eval_state(me=me),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = self.moveOrdering([action for sublist in actions for action in sublist]) #Flatten and order the list of lists
@@ -237,7 +243,7 @@ class Board():
             self.update_state(act,minimax_depth=n_depth) #Update the state.
             #print(n_depth)
             #self.display_board()
-            m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1) 
+            m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1, me=me) 
 
             if m < minv: #Best action so far
                 minv = m 

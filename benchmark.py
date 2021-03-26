@@ -5,19 +5,28 @@ from main import run_game
 
 CONTENDERS = sorted([
         {
-            'name': 'hminimax-depth2',
+            'name': 'hminimax-depth2-e1',
             'type': 'hminimax',
             'parameters': {
                 'depth': 2,
+                'eval_type': 'default',
             },
         },
         {
-            'name': 'hminimax-depth3',
+            'name': 'hminimax-depth2-e2',
             'type': 'hminimax',
             'parameters': {
-                'depth': 3,
+                'depth': 2,
+                'eval_type': 'alt',
             },
         },
+        # {
+        #     'name': 'hminimax-depth3',
+        #     'type': 'hminimax',
+        #     'parameters': {
+        #         'depth': 3,
+        #     },
+        # },
         {
             'name': 'hminimax-depth4',
             'type': 'hminimax',
@@ -25,25 +34,25 @@ CONTENDERS = sorted([
                 'depth': 4,
             },
         },
-        {
-            'name': 'hminimax-depth5',
-            'type': 'hminimax',
-            'parameters': {
-                'depth': 5,
-            },
-        },
-        {
-            'name': 'hminimax-depth6',
-            'type': 'hminimax',
-            'parameters': {
-                'depth': 6,
-            },
-        },
-        {
-            'name': 'random',
-            'type': 'random',
-            'parameters': {},
-        },
+        # {
+        #     'name': 'hminimax-depth5',
+        #     'type': 'hminimax',
+        #     'parameters': {
+        #         'depth': 5,
+        #     },
+        # },
+        # {
+        #     'name': 'hminimax-depth6',
+        #     'type': 'hminimax',
+        #     'parameters': {
+        #         'depth': 6,
+        #     },
+        # },
+        # {
+        #     'name': 'random',
+        #     'type': 'random',
+        #     'parameters': {},
+        # },
     ],
     key=lambda k: k['name']
 )
@@ -144,7 +153,7 @@ def display_results():
 
 if __name__ == "__main__":
     iterations = 10
-    winning_points = 10
+    winning_points = 30
     duels = draw_duels()
     print(f"Running benchmark suite of {len(duels.keys())} tests: {list(duels.keys())}\n")
     for duel_key, players in duels.items():
