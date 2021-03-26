@@ -134,26 +134,32 @@ class Board():
         """Return an estimate of the expected utility of the board state.
         Return negative values if MIN is winning and positives if MAX does.
         """
+        evaluation = 0
         score_balance = self.pl_scores[1] - self.pl_scores[0]
         pl_params = self.pl_params[me] if me is not None else None
-        print(f'turn={self.pl_turn} me={me} params={pl_params}')
         if not pl_params or pl_params.get('eval_type', 'default') == 'default':
-            rows_advanced_weight = 1.0
-            print(f'rows_advanced_weight = 1.0')
-        else: # default
-            rows_advanced_weight = 0.95 # disincentivise advancing rows (compared to scoring)
-            print('rows_advanced_weight = 0.95')
-        rows_advanced = 0
-        for _, piece in enumerate(self.state):
-            if piece: # non-empty cell
-                if piece.pl_id == 1:
-                    rows_advanced += piece.distance_from_home()
-                elif piece.pl_id == -1:
-                    # substract points for the pieces of the other player
-                    rows_advanced -= piece.distance_from_home()
-                else:
-                    raise ValueError('Unknown player "{}" in Piece, valid players: [0,1]'.format(piece.pl_id))
-        return score_balance + rows_advanced_weight*(rows_advanced/(self.row_count+1))
+            eval_types = 'score+rows'.split('+') # default
+        else:
+            eval_types = pl_params['eval_type'].split('+')
+        if 'score' in eval_types:
+            evaluation += score_balance
+        if 'rows' in eval_types:
+            rows_advanced = 0
+            if 'score_eager' in eval_types:
+                rows_advanced_weight = 0.95
+            else:
+                rows_advanced_weight = 1.0
+            for _, piece in enumerate(self.state):
+                if piece: # non-empty cell
+                    if piece.pl_id == 1:
+                        rows_advanced += piece.distance_from_home()
+                    elif piece.pl_id == -1:
+                        # substract points for the pieces of the other player
+                        rows_advanced -= piece.distance_from_home()
+                    else:
+                        raise ValueError('Unknown player "{}" in Piece, valid players: [0,1]'.format(piece.pl_id))
+            evaluation += rows_advanced_weight*(rows_advanced/(self.row_count+1))
+        return evaluation
 
     def terminal_test(self):
         gridlock_win, score_win = None, None

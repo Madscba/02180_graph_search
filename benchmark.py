@@ -5,49 +5,71 @@ from main import run_game
 
 CONTENDERS = sorted([
         {
-            'name': 'hminimax-depth2-e1',
-            'type': 'hminimax',
-            'parameters': {
-                'depth': 2,
-                'eval_type': 'default',
-            },
-        },
-        {
-            'name': 'hminimax-depth2-e2',
-            'type': 'hminimax',
-            'parameters': {
-                'depth': 2,
-                'eval_type': 'alt',
-            },
-        },
-        # {
-        #     'name': 'hminimax-depth3',
-        #     'type': 'hminimax',
-        #     'parameters': {
-        #         'depth': 3,
-        #     },
-        # },
-        {
-            'name': 'hminimax-depth4',
+            'name': 'hminimax-d4-score',
             'type': 'hminimax',
             'parameters': {
                 'depth': 4,
+                # 'eval_type': 'default', # default = score+rows
+                'eval_type': 'score',
+                # 'eval_type': 'score+rows',
+                # 'eval_type': 'score+rows+score_eager',
             },
         },
-        # {
-        #     'name': 'hminimax-depth5',
-        #     'type': 'hminimax',
-        #     'parameters': {
-        #         'depth': 5,
-        #     },
-        # },
-        # {
-        #     'name': 'hminimax-depth6',
-        #     'type': 'hminimax',
-        #     'parameters': {
-        #         'depth': 6,
-        #     },
-        # },
+        {
+            'name': 'hminimax-d4-score+rows',
+            'type': 'hminimax',
+            'parameters': {
+                'depth': 4,
+                # 'eval_type': 'default', # default = score+rows
+                # 'eval_type': 'score',
+                'eval_type': 'score+rows',
+                # 'eval_type': 'score+rows+score_eager',
+            },
+        },
+        {
+            'name': 'hminimax-d4-s+r+score_eager',
+            'type': 'hminimax',
+            'parameters': {
+                'depth': 4,
+                # 'eval_type': 'default', # default = score+rows
+                # 'eval_type': 'score',
+                # 'eval_type': 'score+rows',
+                'eval_type': 'score+rows+score_eager',
+            },
+        },
+        {
+            'name': 'hminimax-d6-score',
+            'type': 'hminimax',
+            'parameters': {
+                'depth': 6,
+                # 'eval_type': 'default', # default = score+rows
+                'eval_type': 'score',
+                # 'eval_type': 'score+rows',
+                # 'eval_type': 'score+rows+score_eager',
+            },
+        },
+        {
+            'name': 'hminimax-d6-score+rows',
+            'type': 'hminimax',
+            'parameters': {
+                'depth': 6,
+                # 'eval_type': 'default', # default = score+rows
+                # 'eval_type': 'score',
+                'eval_type': 'score+rows',
+                # 'eval_type': 'score+rows+score_eager',
+            },
+        },
+        {
+            'name': 'hminimax-d6-s+r+score_eager',
+            'type': 'hminimax',
+            'parameters': {
+                'depth': 6,
+                # 'eval_type': 'default', # default = score+rows
+                # 'eval_type': 'score',
+                # 'eval_type': 'score+rows',
+                'eval_type': 'score+rows+score_eager',
+            },
+        },
         # {
         #     'name': 'random',
         #     'type': 'random',
@@ -123,29 +145,29 @@ def display_results():
         columns.add(column)
     rows = sorted(rows)
     columns = sorted(columns)
-    print(f'\nVICTORIES       ', end='\t')
-    [print(f'{column:<16}', end='\t') for column in columns]
+    print(f'\nVICTORIES            ', end='\t')
+    [print(f'{column:<21}', end='\t') for column in columns]
     print()
     for row in rows:
-        print(f'{row:<16}', end='\t')
+        print(f'{row:<21}', end='\t')
         for column in columns:
             duel = RESULTS.get(f'{row}|{column}', {})
             if duel:
                 string = f'{duel["victories"]["pl1"]} / {duel["victories"]["pl2"]}'
-                print(f'{string:<16}', end='\t')
+                print(f'{string:<21}', end='\t')
             else:
                 print('--------        ', end="\t")
         print()
-    print(f'\nPOINTS          ', end='\t')
-    [print(f'{column:<16}', end='\t') for column in columns]
+    print(f'\nPOINTS               ', end='\t')
+    [print(f'{column:<21}', end='\t') for column in columns]
     print()
     for row in rows:
-        print(f'{row:<16}', end='\t')
+        print(f'{row:<21}', end='\t')
         for column in columns:
             duel = RESULTS.get(f'{row}|{column}', {})
             if duel:
                 string = f'{duel["points"]["pl1"]} / {duel["points"]["pl2"]}'
-                print(f'{string:<16}', end='\t')
+                print(f'{string:<21}', end='\t')
             else:
                 print('--------        ', end="\t")
         print()
