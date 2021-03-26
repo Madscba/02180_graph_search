@@ -1,0 +1,7 @@
+version: "3.7"
+
+services:
+  kulibrat:
+    build: .
+    stdin_open: true
+    tty: true
