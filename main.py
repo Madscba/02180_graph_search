@@ -31,8 +31,8 @@ def run_game(pl1, pl2, winning_points, interactive=True):
         gridlock_winner, score_winner = board.terminal_test()
         if any((gridlock_winner, score_winner)):
             break
-        if iteration_count > winning_points**3:
-            raise RecursionError(f'MAX_ITERATIONS ({winning_points**3}) reached')
+        if iteration_count > winning_points*30:
+            raise RecursionError(f'MAX_ITERATIONS ({winning_points*30}) reached')
         if interactive:
             board.display_board()
             print("Value of last move: ",value)
