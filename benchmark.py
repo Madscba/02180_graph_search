@@ -1,15 +1,16 @@
 import json
 from itertools import product
+from datetime import datetime
 
 from main import run_game
 
 
 TEST_SETTINGS = {
-    'depth': [4, 5],
+    'depth': [4, 5, 6, 7, 8],
     'row_score': [0.2],
-    'action_score': [0.2, 0.4, 0.6],
-    'action_score_decrease_rate': [1, 1.25, 2],
-    # 'attack_action_score': [0.0, 0.02, 0.04, 0.08],
+    'action_score': [0.1],
+    'action_score_decrease_rate': [2],
+    'attack_action_score': [0.0],
 }
 
 
@@ -104,26 +105,13 @@ def display_results(results):
         columns.add(column)
     rows = sorted(rows)
     columns = sorted(columns)
-    # print(f'\nVICTORIES            ', end='\t')
-    # [print(f'{column:<21}', end='\t') for column in columns]
-    # print()
-    # for row in rows:
-    #     print(f'{row:<21}', end='\t')
-    #     for column in columns:
-    #         duel = RESULTS.get(f'{row}|{column}', {})
-    #         if duel:
-    #             string = f'{duel["victories"]["pl1"]} / {duel["victories"]["pl2"]}'
-    #             print(f'{string:<21}', end='\t')
-    #         else:
-    #             print('--------        ', end="\t")
-    #     print()
-    print(f'\n             Player1:', end='\t')
+    print(f'\n                     ', end='\t')
     [print(f'{column:<21}', end='\t') for column in columns]
     print()
     print(f'                     ', end='\t')
     [print(f'---------------------', end='\t') for column in columns]
     print()
-    print(f'Player2:             ', end='\t')
+    print(f'                     ', end='\t')
     [print(f'point%   win% time_ms', end='\t') for column in columns]
     print()
     for row in rows:
@@ -143,9 +131,21 @@ def display_results(results):
                     time_per_turn = 1000 * duel["runtimes"]["pl1"] / duel["total_turns"] / 2
                 except ZeroDivisionError:
                     time_per_turn = float('NaN')
-                # string = f'{duel["points"]["pl1"]} / {duel["points"]["pl2"]}'
-                print(f'{point_ratio:>6.1f}{victory_ratio:>7.1f}{time_per_turn:>8.2f}', end='\t')
-            else:
+                # print(f'{point_ratio:>6.1f}{victory_ratio:>7.1f}{time_per_turn:>8.2f}', end='\t')
+            duel2 = results.get(f'{row}|{column}', {})
+            if duel2:
+                try:
+                    victory_ratio += 100 - (100 * duel2["victories"]["pl1"] / ( duel2["victories"]["pl1"] + duel2["victories"]["pl2"]))
+                except ZeroDivisionError:
+                    victory_ratio = float('NaN')
+                try:
+                    point_ratio += 100 - (100 * duel2["points"]["pl1"] / ( duel2["points"]["pl1"] + duel2["points"]["pl2"]))
+                except ZeroDivisionError:
+                    point_ratio = float('NaN')
+                # string = f'{duel2["points"]["pl1"]} / {duel2["points"]["pl2"]}'
+            try:
+                print(f'{point_ratio/2:>6.1f}{victory_ratio/2:>7.1f}{time_per_turn:>8.2f}', end='\t')
+            except:
                 print('--------        ', end="\t")
         print()
 
@@ -165,3 +165,7 @@ if __name__ == "__main__":
         print(f'Test {count:>4}/{len(duels)}: ', end='')
         results[duel_key] = run_benchmark(players[0], players[1], iterations, winning_points)
     display_results(results)
+    filename = f'results-{datetime.now().isoformat()}.json'
+    with open(filename, 'w') as outfile:
+        json.dump(results, outfile)
+    print(f'Results saved in {filename}')
