@@ -130,12 +130,12 @@ class Board():
             self.pl_scores[pl_idx] -=1
 
 
-    def eval_state(self, me=None):
+    def eval_state(self, invoking_player=None):
         """Return an estimate of the expected utility of the board state.
         Return negative values if MIN is winning and positives if MAX does.
         """
         evaluation = 0
-        pl_params = self.pl_params[me] if me is not None else {}
+        pl_params = self.pl_params[invoking_player] if invoking_player is not None else {}
 
         # evaluate scores
         score_balance = self.pl_scores[1] - self.pl_scores[0]
@@ -195,7 +195,7 @@ class Board():
                 raise RuntimeError('Score inconsistency, both players have achieved winning_score')
         return (gridlock_win, score_win)
 
-    def max_alpha_beta(self, alpha, beta, n_depth, me=None):
+    def max_alpha_beta(self, alpha, beta, n_depth, invoking_player=None):
         maxv = -100000 #VERY SMALL
         action = None
 
@@ -211,7 +211,7 @@ class Board():
             #self.display_board()
             return (maxv, None) #If game is won by score, then Max lost
         if n_depth==0:
-            return (self.eval_state(me=me),None)
+            return (self.eval_state(invoking_player=invoking_player),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = self.moveOrdering([action for sublist in actions for action in sublist]) #Flatten the list of lists
@@ -222,7 +222,7 @@ class Board():
             self.update_state(act,minimax_depth=n_depth) #Update the state.
             #print(n_depth)
             #self.display_board()
-            m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1, me=me) 
+            m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1, invoking_player=invoking_player)
 
 
             if m > maxv: #Best action so far
@@ -242,7 +242,7 @@ class Board():
                 alpha = maxv
         return (maxv, action)
 
-    def min_alpha_beta(self, alpha, beta, n_depth, me=None):
+    def min_alpha_beta(self, alpha, beta, n_depth, invoking_player=None):
         minv = 100000 #VERY LARGE
         action = None
 
@@ -258,7 +258,7 @@ class Board():
             #self.display_board()
             return (minv, None) #If game is won by score, then Min lost
         if n_depth==0:
-            return (self.eval_state(me=me),None)
+            return (self.eval_state(invoking_player=invoking_player),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = self.moveOrdering([action for sublist in actions for action in sublist]) #Flatten and order the list of lists
@@ -269,7 +269,7 @@ class Board():
             self.update_state(act,minimax_depth=n_depth) #Update the state.
             #print(n_depth)
             #self.display_board()
-            m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1, me=me) 
+            m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1, invoking_player=invoking_player)
 
             if m < minv: #Best action so far
                 minv = m 

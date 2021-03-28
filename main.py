@@ -58,7 +58,7 @@ def run_game(pl1, pl2, winning_points, interactive=True):
                     if pl1['type'] == 'random':
                         value, chosen_action = None, random.choice(random.choice(actions))
                     else:
-                        value, chosen_action = board.min_alpha_beta(-1000,1000,pl1_depth, me=0)
+                        value, chosen_action = board.min_alpha_beta(-1000, 1000, pl1_depth, invoking_player=0)
                     end = timer()
                     pl1_time += end - start
                 else:
@@ -66,7 +66,7 @@ def run_game(pl1, pl2, winning_points, interactive=True):
                     if pl2['type'] == 'random':
                         value, chosen_action = None, random.choice(random.choice(actions))
                     else:
-                        value, chosen_action = board.max_alpha_beta(-1000,1000,pl2_depth, me=1)
+                        value, chosen_action = board.max_alpha_beta(-1000, 1000, pl2_depth, invoking_player=1)
                     end = timer()
                     pl2_time += end - start
             else:
