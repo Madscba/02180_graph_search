@@ -39,6 +39,7 @@ def run_game(pl1, pl2, winning_points, interactive=True):
         if iteration_count > max_iterations:
             print(f'  pl1 actions={board.pl[0].get_actions(board)}')
             print(f'  pl2 actions={board.pl[1].get_actions(board)}')
+            print("  Score: {}".format(board.pl_scores))
             print("  Value of last move: ", value)
             print(f'  gridlock_winner={gridlock_winner}, score_winner={score_winner}')
             board.display_board()
@@ -106,11 +107,11 @@ if __name__ == "__main__":
     #     'type': 'human',
     # }
     pl1 = {
-        'name': 'hminimax-depth5', # any string
+        'name': 'hminimax-depth4', # any string
         'type': 'hminimax',        # human | hminimax | random
         'parameters': {            # algorithm parameters
-            'depth': 5,
-            'row_score': [0.2],
+            'depth': 4,            # hminimax depth
+            'row_score': 0.0,      # enable=0.20 / disable=0.0
         }
     }
     pl2 = {
@@ -118,7 +119,7 @@ if __name__ == "__main__":
         'type': 'hminimax',
         'parameters': {
             'depth': 5,
-            'row_score': [0.2],
+            'row_score': 0.0,
         }
     }
     winning_points = 10
