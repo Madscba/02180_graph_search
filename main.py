@@ -1,6 +1,9 @@
-import numpy as np
 import random
 import sys
+from timeit import default_timer as timer
+
+import numpy as np
+
 from classes import Board
 
 def initialize_game(pl1, pl2, winning_points):
@@ -24,6 +27,8 @@ def run_game(pl1, pl2, winning_points, interactive=True):
 
     iteration_count = 0
     value=0
+    pl1_time = 0
+    pl2_time = 0
     board = initialize_game(pl1, pl2, winning_points)
 
     while True:
@@ -32,6 +37,8 @@ def run_game(pl1, pl2, winning_points, interactive=True):
         if any((gridlock_winner, score_winner)):
             break
         if iteration_count > winning_points*30:
+            print(f'pl1 actions={board.pl[0].get_actions(board)}')
+            print(f'pl2 actions={board.pl[1].get_actions(board)}')
             raise RecursionError(f'MAX_ITERATIONS ({winning_points*30}) reached')
         if interactive:
             board.display_board()
@@ -44,15 +51,21 @@ def run_game(pl1, pl2, winning_points, interactive=True):
             current_player_cannot_move = False
             if cur_pl.human == False:
                 if cur_pl.pl_id == -1: 
+                    start = timer()
                     if pl1['type'] == 'random':
                         value, chosen_action = None, evaluate_actions(actions, board)
                     else:
                         value, chosen_action = board.min_alpha_beta(-1000,1000,pl1_depth, me=0)
+                    end = timer()
+                    pl1_time += end - start
                 else:
+                    start = timer()
                     if pl2['type'] == 'random':
                         value, chosen_action = None, evaluate_actions(actions, board)
                     else:
                         value, chosen_action = board.max_alpha_beta(-1000,1000,pl2_depth, me=1)
+                    end = timer()
+                    pl2_time += end - start
             else:
                 [print("{} piece: {} from {}  to {}".format(action[2],action[3]+1,action[0],action[1])) for piece_actions in actions for action in piece_actions ]
                 while True:
@@ -80,6 +93,8 @@ def run_game(pl1, pl2, winning_points, interactive=True):
     return {
         'winner': winner,
         'scores': (board.pl_scores[0], board.pl_scores[1]),
+        'runtimes': (pl1_time, pl2_time),
+        'total_turns': iteration_count,
     }
 
 
