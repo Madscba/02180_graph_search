@@ -135,21 +135,15 @@ class Board():
         Return negative values if MIN is winning and positives if MAX does.
         """
         evaluation = 0
+
+        # evaluate scores
         score_balance = self.pl_scores[1] - self.pl_scores[0]
         pl_params = self.pl_params[me] if me is not None else {}
-        # if not pl_params or pl_params.get('eval_type', 'default') == 'default':
-        #     eval_types = 'score+rows'.split('+') # default
-        # else:
-        #     eval_types = pl_params['eval_type'].split('+')
-        # if 'score' in eval_types:
-        #     evaluation += score_balance
         evaluation += score_balance
+
+        # evaluate position of pieces
         if 'row_score' in pl_params and pl_params['row_score'] > 0:
             rows_advanced = 0
-            if 'score_eager' in []:
-                rows_advanced_weight = 0.95
-            else:
-                rows_advanced_weight = 1.0
             for _, piece in enumerate(self.state):
                 if piece: # non-empty cell
                     if piece.pl_id == 1:
@@ -159,13 +153,16 @@ class Board():
                         rows_advanced -= piece.distance_from_home()
                     else:
                         raise ValueError('Unknown player "{}" in Piece, valid players: [0,1]'.format(piece.pl_id))
-            evaluation += rows_advanced_weight*(rows_advanced*pl_params['row_score'])
+            evaluation += rows_advanced * pl_params['row_score']
+
+        # evaluate available actions
         if 'action_score' in pl_params and pl_params['action_score'] > 0:
             dynamic_action_score = pl_params['action_score']
             for sublist in self.pl[0].get_actions(self):
                 for action in sublist:
                     dynamic_action_score = dynamic_action_score / pl_params.get('action_score_decrease_rate', 2)
                     evaluation -= dynamic_action_score
+                    # bonus for attack actions
                     if ('attack_action_score' in pl_params and
                             action[2] == 'Attack' and
                             pl_params['attack_action_score'] > 0 and
@@ -176,6 +173,7 @@ class Board():
                 for action in sublist:
                     dynamic_action_score = dynamic_action_score / pl_params.get('action_score_decrease_rate', 2)
                     evaluation += dynamic_action_score
+                    # bonus for attack actions
                     if ('attack_action_score' in pl_params and
                             action[2] == 'Attack' and
                             pl_params['attack_action_score'] > 0 and
