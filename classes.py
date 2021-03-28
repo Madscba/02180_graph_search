@@ -1,6 +1,6 @@
 import numpy as np
 class Board():
-    def __init__(self,pl1,pl2,score):
+    def __init__(self,pl1,pl2,score, pl1_params=None, pl2_params=None):
         """
         :param pl1: Boolean value, True for human, False for machine
         :param pl2: Boolean value, True for human, False for machine
@@ -12,6 +12,7 @@ class Board():
         self.pl_turn = 0 #[0 for player 1, 1 for player 2]
         self.wining_score = score
         self.pl_scores = [0,0]
+        self.pl_params = [pl1_params, pl2_params]
         self.row_count = 4
         self.column_count = 3
         self.minimax_dict = {}
@@ -129,25 +130,56 @@ class Board():
             self.pl_scores[pl_idx] -=1
 
 
-    def eval_state(self):
+    def eval_state(self, invoking_player=None):
         """Return an estimate of the expected utility of the board state.
-
-        Note that the value is a global evaluation for both players, negative 
-        values indicate that MIN is winning, and positives indicate that MAX is winning.
+        Return negative values if MIN is winning and positives if MAX does.
         """
+        evaluation = 0
+        pl_params = self.pl_params[invoking_player] if invoking_player is not None else {}
+
+        # evaluate scores
         score_balance = self.pl_scores[1] - self.pl_scores[0]
-        rows_advanced_weight = 0.95 # disincentivise advancing rows (compared to scoring)
-        rows_advanced = 0
-        for _, piece in enumerate(self.state):
-            if piece: # non-empty cell
-                if piece.pl_id == 1:
-                    rows_advanced += piece.distance_from_home()
-                elif piece.pl_id == -1:
-                    # substract points for the pieces of the other player
-                    rows_advanced -= piece.distance_from_home()
-                else:
-                    raise ValueError('Unknown player "{}" in Piece, valid players: [0,1]'.format(piece.pl_id))
-        return score_balance + rows_advanced_weight*(rows_advanced/(self.row_count+1))
+        evaluation += score_balance
+
+        # evaluate position of pieces
+        if 'row_score' in pl_params and pl_params['row_score'] > 0:
+            rows_advanced = 0
+            for _, piece in enumerate(self.state):
+                if piece: # non-empty cell
+                    if piece.pl_id == 1:
+                        rows_advanced += piece.distance_from_home()
+                    elif piece.pl_id == -1:
+                        # substract points for the pieces of the other player
+                        rows_advanced -= piece.distance_from_home()
+                    else:
+                        raise ValueError('Unknown player "{}" in Piece, valid players: [0,1]'.format(piece.pl_id))
+            evaluation += rows_advanced * pl_params['row_score']
+
+        # evaluate available actions
+        if 'action_score' in pl_params and pl_params['action_score'] > 0:
+            dynamic_action_score = pl_params['action_score']
+            for sublist in self.pl[0].get_actions(self):
+                for action in sublist:
+                    dynamic_action_score = dynamic_action_score / pl_params.get('action_score_decrease_rate', 2)
+                    evaluation -= dynamic_action_score
+                    # bonus for attack actions
+                    if ('attack_action_score' in pl_params and
+                            action[2] == 'Attack' and
+                            pl_params['attack_action_score'] > 0 and
+                            self.pl_turn == 0):
+                        evaluation -= pl_params['attack_action_score']
+            dynamic_action_score = pl_params['action_score']
+            for sublist in self.pl[1].get_actions(self):
+                for action in sublist:
+                    dynamic_action_score = dynamic_action_score / pl_params.get('action_score_decrease_rate', 2)
+                    evaluation += dynamic_action_score
+                    # bonus for attack actions
+                    if ('attack_action_score' in pl_params and
+                            action[2] == 'Attack' and
+                            pl_params['attack_action_score'] > 0 and
+                            self.pl_turn == 1):
+                        evaluation += pl_params['attack_action_score']
+        return evaluation
 
     def terminal_test(self):
         gridlock_win, score_win = None, None
@@ -163,7 +195,7 @@ class Board():
                 raise RuntimeError('Score inconsistency, both players have achieved winning_score')
         return (gridlock_win, score_win)
 
-    def max_alpha_beta(self, alpha, beta, n_depth):
+    def max_alpha_beta(self, alpha, beta, n_depth, invoking_player=None):
         maxv = -100000 #VERY SMALL
         action = None
 
@@ -179,7 +211,7 @@ class Board():
             #self.display_board()
             return (maxv, None) #If game is won by score, then Max lost
         if n_depth==0:
-            return (self.eval_state(),None)
+            return (self.eval_state(invoking_player=invoking_player),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = self.moveOrdering([action for sublist in actions for action in sublist]) #Flatten the list of lists
@@ -190,7 +222,7 @@ class Board():
             self.update_state(act,minimax_depth=n_depth) #Update the state.
             #print(n_depth)
             #self.display_board()
-            m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1) 
+            m,min_action = self.min_alpha_beta(alpha,beta,n_depth=n_depth-1, invoking_player=invoking_player)
 
 
             if m > maxv: #Best action so far
@@ -210,7 +242,7 @@ class Board():
                 alpha = maxv
         return (maxv, action)
 
-    def min_alpha_beta(self, alpha, beta, n_depth):
+    def min_alpha_beta(self, alpha, beta, n_depth, invoking_player=None):
         minv = 100000 #VERY LARGE
         action = None
 
@@ -226,7 +258,7 @@ class Board():
             #self.display_board()
             return (minv, None) #If game is won by score, then Min lost
         if n_depth==0:
-            return (self.eval_state(),None)
+            return (self.eval_state(invoking_player=invoking_player),None)
         
         actions = self.pl[self.pl_turn].get_actions(self)
         actions = self.moveOrdering([action for sublist in actions for action in sublist]) #Flatten and order the list of lists
@@ -237,7 +269,7 @@ class Board():
             self.update_state(act,minimax_depth=n_depth) #Update the state.
             #print(n_depth)
             #self.display_board()
-            m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1) 
+            m,max_action = self.max_alpha_beta(alpha,beta,n_depth=n_depth-1, invoking_player=invoking_player)
 
             if m < minv: #Best action so far
                 minv = m 
