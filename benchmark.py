@@ -7,10 +7,10 @@ from main import run_game
 
 TEST_SETTINGS = {
     'depth': [4, 5, 6, 7, 8],
-    'row_score': [0.2],
+    'row_score': [0.0, 0.2],
     'action_score': [0.1],
-    'action_score_decrease_rate': [2],
-    'attack_action_score': [0.0],
+    # 'action_score_decrease_rate': [2],
+    # 'attack_action_score': [0.0],
 }
 
 

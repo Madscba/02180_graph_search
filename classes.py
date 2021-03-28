@@ -135,10 +135,10 @@ class Board():
         Return negative values if MIN is winning and positives if MAX does.
         """
         evaluation = 0
+        pl_params = self.pl_params[me] if me is not None else {}
 
         # evaluate scores
         score_balance = self.pl_scores[1] - self.pl_scores[0]
-        pl_params = self.pl_params[me] if me is not None else {}
         evaluation += score_balance
 
         # evaluate position of pieces
