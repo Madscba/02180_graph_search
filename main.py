@@ -90,7 +90,7 @@ def run_game(pl1, pl2, winning_points, interactive=True):
         board.update_state(chosen_action)
 
         if interactive:
-            print("Score: {}".format(board.pl_scores))
+            print("\nScore: {}".format(board.pl_scores))
     if score_winner:
         winner = score_winner
     elif gridlock_winner:
