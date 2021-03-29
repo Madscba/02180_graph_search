@@ -2,8 +2,6 @@ import random
 import sys
 from timeit import default_timer as timer
 
-import numpy as np
-
 from classes import Board
 
 
@@ -70,12 +68,17 @@ def run_game(pl1, pl2, winning_points, interactive=True):
                     end = timer()
                     pl2_time += end - start
             else:
-                [print("{} piece: {} from {}  to {}".format(action[2],action[3]+1,action[0],action[1])) for piece_actions in actions for action in piece_actions ]
+                action_choices = [action for piece_actions in actions for action in piece_actions]
+                [print("[{}] Piece {}: {} from {} to {}".format(
+                        idx+1, action[3]+1, action[2], action[0],action[1]
+                    )) for idx, action in enumerate(action_choices)]
                 while True:
                     try:
-                        human_input = input("Choose piece, and option (format: 'piece,action'))").split(",")
-                        chosen_action = actions[int(human_input[0])-1][int(human_input[1])-1]
-                        break
+                        human_input = input("Choose action number from the list: ")
+                        chosen_action_id = int(human_input)-1
+                        if chosen_action_id >= 0:
+                            chosen_action = action_choices[chosen_action_id]
+                            break
                     except KeyboardInterrupt:
                         sys.exit("Keyboard interrupt")
                     except:
@@ -102,24 +105,30 @@ def run_game(pl1, pl2, winning_points, interactive=True):
 
 
 if __name__ == "__main__":
-    # pl2 = {
-    #     'name': 'human',
-    #     'type': 'human',
+    # pl1 = {
+    #     'name': 'hminimax-depth4',
+    #     'type': 'hminimax',
+    #     'parameters': {
+    #         'depth': 4,
+    #         'row_score': 0.2,
+    #         'action_score': 0.1,
+    #         'action_score_decrease_rate': 2,
+    #         'attack_action_score': 0.0,
+    #     }
     # }
     pl1 = {
-        'name': 'hminimax-depth4', # any string
-        'type': 'hminimax',        # human | hminimax | random
-        'parameters': {            # algorithm parameters
-            'depth': 4,            # hminimax depth
-            'row_score': 0.0,      # enable=0.20 / disable=0.0
-        }
+        'name': 'human',
+        'type': 'human',
     }
     pl2 = {
-        'name': 'hminimax-depth5',
-        'type': 'hminimax',
-        'parameters': {
-            'depth': 5,
-            'row_score': 0.0,
+        'name': 'hminimax-depth5', # any string
+        'type': 'hminimax',        # human | hminimax | random
+        'parameters': {            # algorithm parameters
+            'depth': 5, # hminimax depth
+            'row_score': 0.2, # enable=0.20 / disable=0.0
+            'action_score': 0.1, # enable=0.1 / disable=0.0
+            'action_score_decrease_rate': 2, # recommended=2
+            'attack_action_score': 0.0, # recommended=0
         }
     }
     winning_points = 10
