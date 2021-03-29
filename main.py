@@ -102,24 +102,30 @@ def run_game(pl1, pl2, winning_points, interactive=True):
 
 
 if __name__ == "__main__":
-    # pl2 = {
-    #     'name': 'human',
-    #     'type': 'human',
+    # pl1 = {
+    #     'name': 'hminimax-depth4',
+    #     'type': 'hminimax',
+    #     'parameters': {
+    #         'depth': 4,
+    #         'row_score': 0.2,
+    #         'action_score': 0.1,
+    #         'action_score_decrease_rate': 2,
+    #         'attack_action_score': 0.0,
+    #     }
     # }
     pl1 = {
-        'name': 'hminimax-depth4', # any string
-        'type': 'hminimax',        # human | hminimax | random
-        'parameters': {            # algorithm parameters
-            'depth': 4,            # hminimax depth
-            'row_score': 0.0,      # enable=0.20 / disable=0.0
-        }
+        'name': 'human',
+        'type': 'human',
     }
     pl2 = {
-        'name': 'hminimax-depth5',
-        'type': 'hminimax',
-        'parameters': {
-            'depth': 5,
-            'row_score': 0.0,
+        'name': 'hminimax-depth5', # any string
+        'type': 'hminimax',        # human | hminimax | random
+        'parameters': {            # algorithm parameters
+            'depth': 5, # hminimax depth
+            'row_score': 0.2, # enable=0.20 / disable=0.0
+            'action_score': 0.1, # enable=0.1 / disable=0.0
+            'action_score_decrease_rate': 2, # recommended=2
+            'attack_action_score': 0.0, # recommended=0
         }
     }
     winning_points = 10
