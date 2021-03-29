@@ -2,8 +2,6 @@ import random
 import sys
 from timeit import default_timer as timer
 
-import numpy as np
-
 from classes import Board
 
 
@@ -70,12 +68,17 @@ def run_game(pl1, pl2, winning_points, interactive=True):
                     end = timer()
                     pl2_time += end - start
             else:
-                [print("{} piece: {} from {}  to {}".format(action[2],action[3]+1,action[0],action[1])) for piece_actions in actions for action in piece_actions ]
+                action_choices = [action for piece_actions in actions for action in piece_actions]
+                [print("[{}] Piece {}: {} from {} to {}".format(
+                        idx+1, action[3]+1, action[2], action[0],action[1]
+                    )) for idx, action in enumerate(action_choices)]
                 while True:
                     try:
-                        human_input = input("Choose piece, and option (format: 'piece,action'))").split(",")
-                        chosen_action = actions[int(human_input[0])-1][int(human_input[1])-1]
-                        break
+                        human_input = input("Choose action number from the list: ")
+                        chosen_action_id = int(human_input)-1
+                        if chosen_action_id >= 0:
+                            chosen_action = action_choices[chosen_action_id]
+                            break
                     except KeyboardInterrupt:
                         sys.exit("Keyboard interrupt")
                     except:
