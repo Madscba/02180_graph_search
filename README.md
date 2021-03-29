@@ -67,7 +67,7 @@ Value of last move:  0.178125
 [2] Piece 3: Diag from 2 to 4
 [3] Piece 4: Insert from None to 0
 ```
-
+* To make a move, select an option from the list using its number.
 * The pieces are numbered: `-1, -2, -3, -4` and `1, 2, 3, 4` where negative pieces belong to player 1 and positives to player 2.
 * Player 1 starts at the top of the board, Player 2 at the bottom.
 * The board cells are numbered `0..11` starting at the top left corner, that is:
