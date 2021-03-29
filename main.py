@@ -1,5 +1,6 @@
 import random
 import sys
+import argparse
 from timeit import default_timer as timer
 
 from classes import Board
@@ -105,25 +106,21 @@ def run_game(pl1, pl2, winning_points, interactive=True):
 
 
 if __name__ == "__main__":
-    # pl1 = {
-    #     'name': 'hminimax-depth4',
-    #     'type': 'hminimax',
-    #     'parameters': {
-    #         'depth': 4,
-    #         'row_score': 0.2,
-    #         'action_score': 0.1,
-    #         'action_score_decrease_rate': 2,
-    #         'attack_action_score': 0.0,
-    #     }
-    # }
     pl1 = {
-        'name': 'human',
+        'name': 'player1',
         'type': 'human',
+        'parameters': {
+            'depth': None,
+            'row_score': 0.2, # enable=0.20 / disable=0.0
+            'action_score': 0.1, # enable=0.1 / disable=0.0
+            'action_score_decrease_rate': 2, # recommended=2
+            'attack_action_score': 0.0, # recommended=0
+        }
     }
     pl2 = {
-        'name': 'hminimax-depth5', # any string
-        'type': 'hminimax',        # human | hminimax | random
-        'parameters': {            # algorithm parameters
+        'name': 'player2', # any string
+        'type': 'hminimax', # human | hminimax | random
+        'parameters': {
             'depth': 5, # hminimax depth
             'row_score': 0.2, # enable=0.20 / disable=0.0
             'action_score': 0.1, # enable=0.1 / disable=0.0
@@ -131,6 +128,17 @@ if __name__ == "__main__":
             'attack_action_score': 0.0, # recommended=0
         }
     }
-    winning_points = 10
-    result = run_game(pl1, pl2, winning_points)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--player1-type', default='human', choices=['human', 'hminimax', 'random'])
+    parser.add_argument('--player1-depth', default=5, type=int)
+    parser.add_argument('--player2-type', default='hminimax', choices=['human', 'hminimax', 'random'])
+    parser.add_argument('--player2-depth', default=5, type=int)
+    parser.add_argument('-w', '--winning-points', default=10, type=int)
+    args = parser.parse_args()
+
+    pl1['type'] = args.player1_type
+    pl1['parameters']['depth'] = args.player1_depth
+    pl2['type'] = args.player2_type
+    pl2['parameters']['depth'] = args.player2_depth
+    result = run_game(pl1, pl2, args.winning_points)
     print(f'Winner: {result["winner"]}, Scores: {result.get("scores")}')
