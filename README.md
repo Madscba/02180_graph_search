@@ -47,13 +47,14 @@ python main.py --player1-type human --player2-type hminimax --player2-depth 4 --
 With docker:
 
 ```
-docker-compose run --rm kulibrat benchmark.py
+docker-compose run --rm kulibrat benchmark.py --depths 4 5 6
 ```
 
 Alternatively with your local python:
 
 ```bash
 pipenv install
-pipenv shell          # to enter virtualenv
-python benchmark.py   # to run the benchmarks
+pipenv shell # to enter virtualenv
+python benchmark.py --depths 4 5 6
+python benchmark.py --help # for more options
 ```

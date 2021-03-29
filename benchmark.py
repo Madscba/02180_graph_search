@@ -1,4 +1,5 @@
 import json
+import argparse
 from itertools import product
 from datetime import datetime
 
@@ -6,9 +7,9 @@ from main import run_game
 
 
 TEST_SETTINGS = {
-    'depth': [4, 5, 6, 7, 8],
-    'row_score': [0.0, 0.2],
-    'action_score': [0.1],
+    'depth': [],
+    'row_score': [],
+    'action_score': [],
     # 'action_score_decrease_rate': [2],
     # 'attack_action_score': [0.0],
 }
@@ -153,8 +154,19 @@ def display_results(results):
 if __name__ == "__main__":
     results = {}
     count = 0
-    iterations = 2
-    winning_points = 15
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--iterations', default=2, type=int)
+    parser.add_argument('-w', '--winning-points', default=15, type=int)
+    parser.add_argument('-d','--depths', type=int, nargs='+', help='<Required> List of depths (e.g. --d 4 5 6)', required=True)
+    parser.add_argument('-r','--row-scores', type=float, nargs='+', help='List of row_scores (e.g. --a 0.0 0.2)', default=[0.2])
+    parser.add_argument('-a','--action-scores', type=float, nargs='+', help='List of action_scores (e.g. --a 0.0 0.1)', default=[0.0, 0.1])
+    args = parser.parse_args()
+
+    TEST_SETTINGS['depth'] = args.depths
+    TEST_SETTINGS['row_score'] = args.row_scores
+    TEST_SETTINGS['action_score'] = args.action_scores
+
     duels = draw_duels()
     print(f"Suite settings {TEST_SETTINGS}")
     print(f"Running benchmark suite of {len(duels.keys())} tests:")
@@ -163,7 +175,7 @@ if __name__ == "__main__":
     for duel_key, players in duels.items():
         count += 1
         print(f'Test {count:>4}/{len(duels)}: ', end='')
-        results[duel_key] = run_benchmark(players[0], players[1], iterations, winning_points)
+        results[duel_key] = run_benchmark(players[0], players[1], args.iterations, args.winning_points)
     display_results(results)
     filename = f'results-{datetime.now().isoformat()}.json'
     with open(filename, 'w') as outfile:
