@@ -8,6 +8,51 @@ def Biconditional(a,b):
     replacing alpha <=> beta with (alpha => beta) and (beta => alpha)
     """
     return And(Implies(a,b),Implies(b,a))
+def dissociate(op, args):
+    """Given an associative op, return a flattened list result such
+    that Expr(op, *result) means the same as Expr(op, *args).
+    >>> dissociate('&', [A & B])
+    [A, B]
+    """
+    result = []
+
+    def collect(subargs):
+        for arg in subargs:
+            if arg.func == op:
+                collect(arg.args)
+            else:
+                result.append(arg)
+
+    collect(args)
+    return result
+def associate(op, args):
+    """Given an associative op, return an expression with the same
+    meaning as Expr(op, *args), but flattened -- that is, with nested
+    instances of the same op promoted to the top level.
+    >>> associate('&', [(A&B),(B|C),(B&C)])
+    (A & B & (B | C) & B & C)
+    >>> associate('|', [A|(B|(C|(A&B)))])
+    (A | B | C | (A & B))
+    """
+    args = dissociate(op, args)
+    
+    if len(args) == 0:
+        return op.identity
+    elif len(args) == 1:
+        return args[0]
+    else:
+        return op(*args)
+
+def remove_all(item, seq):
+    """Return a copy of seq (or string) with all occurrences of item removed."""
+    if isinstance(seq, str):
+        return seq.replace(item, '')
+    elif isinstance(seq, set):
+        rest = seq.copy()
+        rest.remove(item)
+        return rest
+    else:
+        return [x for x in seq if x != item]
 
 class Knowledge_base():
     """ Knowledge base is a set of sentences, where sentence refer to an assertions that we believe to be true in the world
@@ -43,18 +88,51 @@ class Knowledge_base():
             self.premises.append((sentence,rank))
         else:
             self.premises.append((to_cnf(sentence), rank))
-    # def PL_resolution(self,KB,alpha):
+    def PL_resolution(self,alpha):
+        alpha = to_cnf(~alpha)
+        clauses = self.to_clauses()
+        clauses.append(alpha)
+        new = set()
+        while True:
+            n = len(clauses)
+            pairs = [(clauses[i], clauses[j])
+                    for i in range(n) for j in range(i + 1, n)]
+            for (ci, cj) in pairs:
+                resolvents = self.PL_resolve(ci, cj)
+                if False in resolvents:
+                    return True
+                new = new.union(set(resolvents))
+            if new.issubset(set(clauses)):
+                return False
+            for c in new:
+                if c not in clauses:
+                    clauses.append(c)
+
+    
+    def PL_resolve(self,ci,cj):
+        clauses = []
+        ci = dissociate(Or, [ci]) #Disjuncts
+        cj = dissociate(Or, [cj]) #Disjuncts
+        for di in ci:
+            for dj in cj:
+                if di == ~dj:
+                    clauses.append(associate(Or, list(set(remove_all(di, ci) + remove_all(dj, cj)))))
+        return clauses
     def to_clauses(self,premises=None):
         """
-        OBS: DOES NOT WORK YET!
+        OBS: DOES NOT WORK YET!  
 
         turn premises into disjunctions of literals
         """
         clauses = []
+        if not premises: #Performs on KB
+            premises = self.premises
         for prem in premises:
             if prem[0].func == And:
                 for clause in prem[0].args:
                     clauses.append(clause)
+            else:
+                clauses.append(prem[0])
         return clauses
 
 
@@ -63,6 +141,11 @@ if __name__ == "__main__":
 
     #Use sympy to return boolean value
     x,y,r,s = symbols("x y r s")
+    ###Resolve test
+    alpha = KB.fetch_sample_thesis()
+    print("Resolution: ",KB.PL_resolution(alpha))
+
+
     exp = Implies(x,y)
     print(exp.subs(x, False))
 
@@ -73,6 +156,8 @@ if __name__ == "__main__":
     [print(f"rank {prem[1]} {prem[0]}") for prem in KB.premises]
     print("#" * 20)
 
+
+
     #Try to make to_clause function to work with example from book:
     """Example from book: Chapter 7.5.2 Proof by resolution (book version 4), subsection "Conjunctive normal form"
     B1, 1 ⇔ (P1, 2 ∨ P2, 1) should be turned into 3 clauses:
@@ -80,10 +165,13 @@ if __name__ == "__main__":
     """
     b1, p1, p2 = symbols("b1 p1 p2")
     s = symbols("s")
-    exp1 = Biconditional(b1, And(p1, p2))
+    exp1 = Biconditional(b1, Or(p1, p2))
     exp2 = Or(s, s)
     ranks = np.arange(2)
     premises = [to_cnf(exp) for exp in [exp1, exp2]]
     init_exp = list(zip(premises, ranks))
     clauses = KB.to_clauses(init_exp)
     print(clauses)
+
+   
+    
