@@ -105,19 +105,22 @@ def satisfiable(expr, algorithm=None, all_models=False):
     return spsatisfiable(expr, algorithm=algorithm, all_models=all_models)
 
 def get_remainders(beliefs, formula):
-    """Return a set of remainders (subsets of the KB) that exclude a given formula"""
+    """Return a set of remainders (subsets) of the KB that do not imply the given formula.
+    The return value is a set of sets.
+    """
     associated = associate(And, beliefs | set([Not(formula)]))
     if satisfiable(associated):
         logging.debug(f'Formula {Not(formula)} satisfiable with {beliefs}')
-        return set([frozenset(beliefs)])
+        return set([frozenset(beliefs)]) # Using frozenset to be able to nest a set into a set
     logging.debug(f'Formula {Not(formula)} not satisfiable with {beliefs}')
-    remainders = set()
+    all_remainders = set()
     for belief in beliefs:
-        # recursively discard belief sets that imply the formula we are contracting
+        # Recursively test all possible subsets by removing one belief at a time
         remainders_excluding_belief = get_remainders(beliefs - set([belief]), formula)
         for remainder in remainders_excluding_belief:
-            remainders.add(remainder)
-    return remainders
+            if remainder:
+                all_remainders.add(remainder)
+    return all_remainders
 
 
 class Knowledge_base():
@@ -176,7 +179,7 @@ class Knowledge_base():
         max_remainder_length = 0
         new_beliefs = None
 
-        # remove identical formulas from the KB
+        # remove from the KB formulas identical to the one being contracted
         self.premises[:] = [premise for premise in self.premises if premise[0] != formula]
 
         # get a set of belief sets that do not imply the formula being contracted
@@ -188,7 +191,7 @@ class Knowledge_base():
         for remainder in all_remainders:
             if isinstance(remainder, Iterable):
                 print(set(remainder))
-            else:
+            else: # just watching out for bugs
                 raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
             if len(remainder) > max_remainder_length:
                 new_beliefs = remainder
@@ -197,7 +200,6 @@ class Knowledge_base():
         print(f'--   Chosen remainder    --')
         print(f'{set(new_beliefs)}')
         print(f'---------------------------\n')
-        return set(all_remainders)
 
     def __repr__(self):
         output = '=============  KB  ===============\n'
