@@ -56,6 +56,38 @@ def remove_all(item, seq):
     else:
         return [x for x in seq if x != item]
 
+def PL_resolution(premises,alpha):
+    alpha = to_cnf(~alpha)
+    alpha = dissociate(And,[alpha])
+    clauses = alpha
+    for i in premises:
+        clauses += dissociate(And,[i])
+    new = set()
+    while True:
+        n = len(clauses)
+        pairs = [(clauses[i], clauses[j])
+                for i in range(n) for j in range(i + 1, n)]
+        for (ci, cj) in pairs:
+            resolvents = PL_resolve(ci, cj)
+            if False in resolvents:
+                return True
+            new = new.union(set(resolvents))
+        if new.issubset(set(clauses)):
+            return False
+        for c in new:
+            if c not in clauses:
+                clauses.append(c)
+
+def PL_resolve(ci,cj):
+    clauses = []
+    ci = dissociate(Or, [ci]) #Disjuncts
+    cj = dissociate(Or, [cj]) #Disjuncts
+    for di in ci:
+        for dj in cj:
+            if di == ~dj:
+                clauses.append(associate(Or, list(set(remove_all(di, ci) + remove_all(dj, cj)))))
+    return clauses
+
 
 class Knowledge_base():
     """ Knowledge base is a set of sentences, where sentence refer to an assertions that we believe to be true in the world
@@ -90,35 +122,7 @@ class Knowledge_base():
         else:
             self.premises.append((to_cnf(sentence), rank))
 
-    def PL_resolution(self,alpha):
-        alpha = to_cnf(~alpha)
-        clauses = self.to_clauses()
-        clauses.append(alpha)
-        new = set()
-        while True:
-            n = len(clauses)
-            pairs = [(clauses[i], clauses[j])
-                    for i in range(n) for j in range(i + 1, n)]
-            for (ci, cj) in pairs:
-                resolvents = self.PL_resolve(ci, cj)
-                if False in resolvents:
-                    return True
-                new = new.union(set(resolvents))
-            if new.issubset(set(clauses)):
-                return False
-            for c in new:
-                if c not in clauses:
-                    clauses.append(c)
 
-    def PL_resolve(self,ci,cj):
-        clauses = []
-        ci = dissociate(Or, [ci]) #Disjuncts
-        cj = dissociate(Or, [cj]) #Disjuncts
-        for di in ci:
-            for dj in cj:
-                if di == ~dj:
-                    clauses.append(associate(Or, list(set(remove_all(di, ci) + remove_all(dj, cj)))))
-        return clauses
 
     def to_clauses(self,premises=None):
         """
@@ -145,9 +149,11 @@ if __name__ == "__main__":
     x,y,r,s = symbols("x y r s")
     ###Resolve test
     alpha = KB.fetch_sample_thesis()
-    print("Resolution: ",KB.PL_resolution(alpha))
-
-
+    premises = []
+    for premis in KB.premises:
+        premises += [premis[0]]
+    print("Resolution: ",PL_resolution(premises,alpha))
+    
     exp = Implies(x,y)
     print(exp.subs(x, False))
 
