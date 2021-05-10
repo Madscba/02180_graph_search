@@ -97,6 +97,7 @@ def PL_resolve(ci,cj):
             if di == ~dj:
                 clauses.append(associate(Or, list(set(remove_all(di, ci) + remove_all(dj, cj)))))
     return clauses
+
 def satisfiable(expr, algorithm=None, all_models=False):
     """Check satisfiability of a propositional sentence. Returns a model when it succeeds.
     XXX TODO: Only for testing purposes. We cannot use this library, we must implement this ourselves.
@@ -108,11 +109,19 @@ def get_remainders(beliefs, formula):
     """Return a set of remainders (subsets) of the KB that do not imply the given formula.
     The return value is a set of sets.
     """
-    associated = associate(And, beliefs | set([Not(formula)]))
-    if satisfiable(associated):
-        logging.debug(f'Formula {Not(formula)} satisfiable with {beliefs}')
+    resolution = PL_resolution(beliefs, Not(formula))
+    is_satisfiable = satisfiable(
+        associate(And, beliefs | set([Not(formula)]))
+    )
+    if is_satisfiable != resolution:
+        logging.warning(f'PL_resolution({beliefs}, {Not(formula)})={resolution} HOWEVER satisfiable={is_satisfiable}')
+    else:
+        logging.debug(f'PL_resolution({beliefs}, {Not(formula)})={resolution} AGREES with satisfiable={is_satisfiable}')
+    # if resolution:
+    if is_satisfiable:
+        logging.debug(f'Formula {Not(formula)} is satisfiable with {beliefs}')
         return set([frozenset(beliefs)]) # Using frozenset to be able to nest a set into a set
-    logging.debug(f'Formula {Not(formula)} not satisfiable with {beliefs}')
+    logging.debug(f'Formula {Not(formula)} is not satisfiable with {beliefs}')
     all_remainders = set()
     for belief in beliefs:
         # Recursively test all possible subsets by removing one belief at a time
@@ -138,6 +147,7 @@ class Knowledge_base():
         """
         p, q, s, r = symbols("p q s r")
         premises = [Implies(Not(p),q),Implies(q,p),Implies(p,And(r,s))]
+        # premises = [p, q, r, Implies(p,q), Implies(q,r)]
         premises = [to_cnf(prem) for prem in premises]
         ranks = np.arange(len(premises))
         return list(zip(premises,ranks))
@@ -245,11 +255,15 @@ def main1():
     clauses = KB.to_clauses(init_exp)
     print(clauses)
 
+def main2():
     print('CONTRACTION')
+    p, q, r = symbols('p q r')
+    KB = Knowledge_base()
     print(KB)
-    KB.contract(s)
+    KB.contract(r)
     print(KB)
 
 
 if __name__ == "__main__":
-    main1()
+    # main1()
+    main2()
