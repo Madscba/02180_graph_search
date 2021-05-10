@@ -8,6 +8,7 @@ def Biconditional(a,b):
     replacing alpha <=> beta with (alpha => beta) and (beta => alpha)
     """
     return And(Implies(a,b),Implies(b,a))
+
 def dissociate(op, args):
     """Given an associative op, return a flattened list result such
     that Expr(op, *result) means the same as Expr(op, *args).
@@ -25,6 +26,7 @@ def dissociate(op, args):
 
     collect(args)
     return result
+
 def associate(op, args):
     """Given an associative op, return an expression with the same
     meaning as Expr(op, *args), but flattened -- that is, with nested
@@ -54,6 +56,7 @@ def remove_all(item, seq):
     else:
         return [x for x in seq if x != item]
 
+
 class Knowledge_base():
     """ Knowledge base is a set of sentences, where sentence refer to an assertions that we believe to be true in the world
     proposition symbol true or false
@@ -73,7 +76,6 @@ class Knowledge_base():
         ranks = np.arange(len(premises))
         return list(zip(premises,ranks))
 
-
     def fetch_sample_thesis(self):
         """"
         Example premises is from exercises from lecture 9.
@@ -82,12 +84,12 @@ class Knowledge_base():
         p, q, s, r = symbols("p q s r")
         return And(p,And(s,r))
 
-
     def add_premise(self,sentence,rank):
         if is_cnf(sentence):
             self.premises.append((sentence,rank))
         else:
             self.premises.append((to_cnf(sentence), rank))
+
     def PL_resolution(self,alpha):
         alpha = to_cnf(~alpha)
         clauses = self.to_clauses()
@@ -108,7 +110,6 @@ class Knowledge_base():
                 if c not in clauses:
                     clauses.append(c)
 
-    
     def PL_resolve(self,ci,cj):
         clauses = []
         ci = dissociate(Or, [ci]) #Disjuncts
@@ -118,6 +119,7 @@ class Knowledge_base():
                 if di == ~dj:
                     clauses.append(associate(Or, list(set(remove_all(di, ci) + remove_all(dj, cj)))))
         return clauses
+
     def to_clauses(self,premises=None):
         """
         OBS: DOES NOT WORK YET!  
