@@ -1,6 +1,16 @@
+import logging
+import os
+from collections.abc import Iterable
+
 import numpy as np
-from sympy import symbols, Symbol, init_printing
+from sympy import symbols, simplify
 from sympy.logic.boolalg import And,Or, Not, Implies, Equivalent, distribute_and_over_or, distribute_or_over_and, is_cnf,to_cnf
+
+logging.basicConfig(
+    level=os.environ.get("LOGLEVEL", "INFO"),
+    format='%(levelname)s: %(message)s'
+)
+
 
 def Biconditional(a,b):
     """
@@ -55,6 +65,28 @@ def remove_all(item, seq):
         return rest
     else:
         return [x for x in seq if x != item]
+
+def satisfiable(expr, algorithm=None, all_models=False):
+    """Check satisfiability of a propositional sentence. Returns a model when it succeeds.
+    XXX TODO: Only for testing purposes. We cannot use this library, we must implement this ourselves.
+    """
+    from sympy.logic.inference import satisfiable as spsatisfiable
+    return spsatisfiable(expr, algorithm=algorithm, all_models=all_models)
+
+def get_remainders(beliefs, formula):
+    """Return a set of remainders (subsets of the KB) that exclude a given formula"""
+    associated = associate(And, beliefs | set([Not(formula)]))
+    if satisfiable(associated):
+        logging.debug(f'Formula {Not(formula)} satisfiable with {beliefs}')
+        return set([frozenset(beliefs)])
+    logging.debug(f'Formula {Not(formula)} not satisfiable with {beliefs}')
+    remainders = set()
+    for belief in beliefs:
+        # recursively discard belief sets that imply the formula we are contracting
+        remainders_excluding_belief = get_remainders(beliefs - set([belief]), formula)
+        for remainder in remainders_excluding_belief:
+            remainders.add(remainder)
+    return remainders
 
 
 class Knowledge_base():
@@ -137,8 +169,41 @@ class Knowledge_base():
                 clauses.append(prem[0])
         return clauses
 
+    def contract(self, formula):
+        max_remainder_length = 0
+        new_beliefs = None
 
-if __name__ == "__main__":
+        # remove identical formulas from the KB
+        self.premises[:] = [premise for premise in self.premises if premise[0] != formula]
+
+        # get a set of belief sets that do not imply the formula being contracted
+        all_remainders = get_remainders(
+            {premise[0] for premise in self.premises},
+            formula
+        )
+        print(f'\n--  Possible remainders  --')
+        for remainder in all_remainders:
+            if isinstance(remainder, Iterable):
+                print(set(remainder))
+            else:
+                raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
+            if len(remainder) > max_remainder_length:
+                new_beliefs = remainder
+                max_remainder_length = len(remainder)
+        print(f'---------------------------')
+        print(f'--   Chosen remainder    --')
+        print(f'{set(new_beliefs)}')
+        print(f'---------------------------\n')
+        return set(all_remainders)
+
+    def __repr__(self):
+        output = '=============  KB  ===============\n'
+        for premise in sorted(self.premises, key=lambda x: float(x[1])):
+            output += f' ({premise[1]:.2f}) {premise[0]}\n'
+        return output + '=================================='
+
+
+def main1():
     KB = Knowledge_base()
 
     #Use sympy to return boolean value
@@ -146,7 +211,6 @@ if __name__ == "__main__":
     ###Resolve test
     alpha = KB.fetch_sample_thesis()
     print("Resolution: ",KB.PL_resolution(alpha))
-
 
     exp = Implies(x,y)
     print(exp.subs(x, False))
@@ -157,8 +221,6 @@ if __name__ == "__main__":
     print("#"*20)
     [print(f"rank {prem[1]} {prem[0]}") for prem in KB.premises]
     print("#" * 20)
-
-
 
     #Try to make to_clause function to work with example from book:
     """Example from book: Chapter 7.5.2 Proof by resolution (book version 4), subsection "Conjunctive normal form"
@@ -175,5 +237,11 @@ if __name__ == "__main__":
     clauses = KB.to_clauses(init_exp)
     print(clauses)
 
-   
-    
+    print('CONTRACTION')
+    print(KB)
+    KB.contract(s)
+    print(KB)
+
+
+if __name__ == "__main__":
+    main1()
