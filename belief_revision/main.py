@@ -208,7 +208,8 @@ class Knowledge_base():
                 max_remainder_length = len(remainder)
         print(f'---------------------------')
         print(f'--   Chosen remainder    --')
-        print(f'{set(new_beliefs)}')
+        [print(belief) for belief in new_beliefs]
+        # print(f'{set(new_beliefs)}')
         print(f'---------------------------\n')
 
     def __repr__(self):
@@ -260,7 +261,7 @@ def main2():
     p, q, r = symbols('p q r')
     KB = Knowledge_base()
     print(KB)
-    KB.contract(r)
+    KB.contract(p)
     print(KB)
 
 
