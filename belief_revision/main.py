@@ -67,7 +67,7 @@ def remove_all(item, seq):
         return [x for x in seq if x != item]
 
 def PL_resolution(premises,alpha):
-    alpha = to_cnf(~alpha)
+    alpha = to_cnf(alpha)
     alpha = dissociate(And,[alpha])
     clauses = alpha
     for i in premises:
@@ -80,10 +80,10 @@ def PL_resolution(premises,alpha):
         for (ci, cj) in pairs:
             resolvents = PL_resolve(ci, cj)
             if False in resolvents:
-                return True
+                return False
             new = new.union(set(resolvents))
         if new.issubset(set(clauses)):
-            return False
+            return True
         for c in new:
             if c not in clauses:
                 clauses.append(c)
@@ -95,7 +95,10 @@ def PL_resolve(ci,cj):
     for di in ci:
         for dj in cj:
             if di == ~dj:
-                clauses.append(associate(Or, list(set(remove_all(di, ci) + remove_all(dj, cj)))))
+                resolve = list(set(remove_all(di, ci) + remove_all(dj, cj)))
+                if len(resolve)==0:
+                    resolve = [False]
+                clauses+= resolve
     return clauses
 
 def satisfiable(expr, algorithm=None, all_models=False):
@@ -109,11 +112,11 @@ def get_remainders(beliefs, formula):
     """Return a set of remainders (subsets) of the KB that do not imply the given formula.
     The return value is a set of sets.
     """
-    resolution = PL_resolution(beliefs, formula)
+    resolution = PL_resolution(beliefs, Not(formula))
     is_satisfiable = satisfiable(
         associate(And, beliefs | set([Not(formula)]))
     )
-    if is_satisfiable != resolution:
+    if isinstance(is_satisfiable,dict) != resolution:
         logging.warning(f'PL_resolution({beliefs}, {Not(formula)})={resolution} HOWEVER satisfiable={is_satisfiable}')
     else:
         logging.debug(f'PL_resolution({beliefs}, {Not(formula)})={resolution} AGREES with satisfiable={is_satisfiable}')
@@ -252,7 +255,7 @@ class Knowledge_base():
                 clauses.append(prem[0])
         return clauses
 
-    def rank_function
+    #def rank_function
 
     def contract(self, formula):
         max_remainder_length = 0
@@ -341,5 +344,5 @@ def main2():
 
 
 if __name__ == "__main__":
-    main1()
-    #main2()
+    #main1()
+    main2()
