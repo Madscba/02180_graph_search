@@ -109,7 +109,7 @@ def get_remainders(beliefs, formula):
     """Return a set of remainders (subsets) of the KB that do not imply the given formula.
     The return value is a set of sets.
     """
-    resolution = PL_resolution(beliefs, Not(formula))
+    resolution = PL_resolution(beliefs, formula)
     is_satisfiable = satisfiable(
         associate(And, beliefs | set([Not(formula)]))
     )
