@@ -339,6 +339,10 @@ class Knowledge_base():
             new_KB = self.selection_function(original_KB, [remainder, remainder])
         print("UPDATE INPUT INDICES")
 
+    def revise(self, formula, rank):
+        self.contract(Not(formula))
+        self.add_premise(formula, rank)
+
     def __repr__(self):
         output = '=============  KB  ===============\n'
         for premise in sorted(self.premises, key=lambda x: float(x[1])):
