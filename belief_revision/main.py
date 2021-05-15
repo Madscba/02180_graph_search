@@ -204,7 +204,11 @@ class Knowledge_base():
             sentence = to_cnf(sentence)
 
         if not PL_resolution([], sentence):  # if not satisfiable = contradiction
-            print("sentence is a contradiction")
+            logging.error(f'{sentence} is a contradiction, skipping.')
+            return
+        # if not PL_resolution(premises, sentence):
+        #     logging.error(f'{sentence} would introduce a contradiction in the KB, skipping. Consider using revision instead.')
+        #     return
         if sentence in premises:
             self.update_rank_of_existing_premise(sentence,rank,premises,ranks)
         else:
@@ -344,6 +348,7 @@ class Knowledge_base():
             else:
                 new_KB = remainder
         print("Update premise to this new KB", new_KB)
+
     def __repr__(self):
         output = '=============  KB  ===============\n'
         for premise in sorted(self.premises, key=lambda x: float(x[1])):
