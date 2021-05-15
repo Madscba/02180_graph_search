@@ -18,9 +18,11 @@ logging.basicConfig(
 class Cli(cmd.Cmd):
     # intro = '\nBelief Revision engine\n\n'
     prompt = '> '
+
     def __init__(self, kb, **kwargs):
         super().__init__(**kwargs)
         self.kb = kb
+
     def do_expand(self, line):
         'Add a belief to the KB. Example: "expand p>>q"'
         if not line:
@@ -29,6 +31,7 @@ class Cli(cmd.Cmd):
         belief = sympify(line)
         rank = input('Enter the rank for this belief (e.g. "0.6"): ')
         self.kb.add_premise(belief, float(rank))
+
     def do_contract(self, line):
         'Remove a belief from the KB. Example: "contract p>>q"'
         if not line:
@@ -36,6 +39,7 @@ class Cli(cmd.Cmd):
             return
         belief = sympify(line)
         self.kb.contract(belief)
+
     def do_revise(self, line):
         'Add a belief and delete other beliefs as necessary to keep consistency. Example: "revise p>>q"'
         if not line:
@@ -44,20 +48,25 @@ class Cli(cmd.Cmd):
         belief = sympify(line)
         rank = input('Enter the rank for this belief (e.g. "0.6"): ')
         self.kb.revise(belief, float(rank))
+
     def do_print(self, line):
         'Print the knowledge base'
         print()
         print(self.kb)
         print()
+
     def do_reset(self, line):
         'Empty the knowledge base'
         self.kb.reset()
+
     def do_quit(self, line):
         'Exit the program'
         return True
+
     def do_EOF(self, line):
         'Quit'
         return True
+
     def do_help(self, line):
         if not line:
             print('\n-- Available commands: contract expand print quit reset revise (type "help <command>" for more information)')
@@ -67,20 +76,25 @@ class Cli(cmd.Cmd):
             print(inspect.getdoc(getattr(self, f'do_{line}')))
         else:
             print(f'No help available for "{line}"')
+
     def emptyline(self):
         self.do_help('')
         pass
+
     def preloop(self):
         print('\nInitialising Knowledge Base...\n')
         for belief, rank in generate_initial_beliefs():
             self.kb.revise(belief, rank)
         print(self.kb)
         self.do_help('')
+
     def precmd(self, line):
         return line
+
     def postcmd(self, stop, line):
         # print(f'postcmd: line={line}')
         return stop
+
     def postloop(self):
         print('\n\nFinal KB:')
         self.do_print('')
