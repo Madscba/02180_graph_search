@@ -7,7 +7,7 @@ import inspect
 from sympy import symbols
 from sympy.core.sympify import sympify
 
-from main import Knowledge_base
+from kb import Knowledge_base
 
 logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO"),
