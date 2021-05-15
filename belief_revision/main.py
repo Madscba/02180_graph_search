@@ -296,8 +296,7 @@ class Knowledge_base():
         print("Ranks:",remainders_ranks)
         new_KB = self.partial_meet(first_remainder,second_remainder)
         ranks = [self.alpha * self.count_entailment(original_KB,belief) + self.beta / self.count_literals(belief) for belief in new_KB]
-        self.premises = [(belief,rank) for belief,rank in zip(new_KB,ranks)]
-        print("UPDATE INPUT INDICES")
+        return [(belief,rank) for belief,rank in zip(new_KB,ranks)]
 
     def partial_meet(self,set1, set2):
         """
@@ -328,26 +327,17 @@ class Knowledge_base():
             {premise[0] for premise in self.premises},
             formula
         )
-        print(f'\n--  Possible remainders  --')
+        logging.debug('Possible remainders')
         for remainder in all_remainders:
             if isinstance(remainder, Iterable):
-                print(set(remainder))
+                logging.debug(set(remainder))
             else: # just watching out for bugs
                 raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
-            if len(remainder) > max_remainder_length:
-                new_beliefs = remainder
-                max_remainder_length = len(remainder)
-        print(f'---------------------------')
-        print(f'--   Chosen remainder    --')
-        [print(belief) for belief in new_beliefs]
-        # print(f'{set(new_beliefs)}')
-        print(f'---------------------------\n')
-        if isinstance(all_remainders,set):
-            if len(all_remainders) > 1:
-                new_KB = self.selection_function(original_KB,all_remainders)
-            else:
-                new_KB = remainder
-        print("Update premise to this new KB", new_KB)
+        if len(all_remainders) > 1:
+            new_KB = self.selection_function(original_KB, all_remainders)
+        else:
+            new_KB = self.selection_function(original_KB, [remainder, remainder])
+        print("UPDATE INPUT INDICES")
 
     def __repr__(self):
         output = '=============  KB  ===============\n'
