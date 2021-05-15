@@ -315,8 +315,10 @@ class Knowledge_base():
                 raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
         if len(all_remainders) > 1:
             new_KB = self.selection_function(original_KB, all_remainders)
-        else:
+        elif len(all_remainders) == 1:
             new_KB = self.selection_function(original_KB, [remainder, remainder])
+        else:
+            self.reset()
         logging.warning("UPDATE INPUT INDICES")
 
     def revise(self, formula, rank):
