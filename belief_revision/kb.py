@@ -4,7 +4,7 @@ from collections.abc import Iterable
 
 import numpy as np
 from sympy import symbols
-from sympy.logic.boolalg import And,Or, Not, Implies, is_cnf, to_cnf
+from sympy.logic.boolalg import And, Or, Not, Implies, is_cnf, to_cnf
 
 logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO"),
@@ -142,34 +142,16 @@ class Knowledge_base():
     def __init__(self):
         self.alpha = 1 #entailment weight (used in evaluation of premise)
         self.beta = 2 #literal length weight (used in evaluation of premise)
-        self.premises = self.fetch_initial_axioms()
+        self.premises = []
+
+    def reset(self):
+        self.premises = []
 
     def fetch_premises(self):
         return [premise[0] for premise in self.premises]
 
     def fetch_ranks(self):
         return [premise[1] for premise in self.premises]
-
-    def fetch_initial_axioms(self):
-        """"
-        Example premises is from exercises from lecture 9
-        """
-        p, q, s, r = symbols("p q s r")
-        beliefs = [Implies(Not(p),q),Implies(q,p),Implies(p,And(r,s))]
-        # premises = [p, q, r, Implies(p,q), Implies(q,r)]
-        beliefs = [to_cnf(belief) for belief in beliefs]
-        temp_ranks = np.arange(5)
-        temp_kb = list(zip(beliefs,temp_ranks))
-        ranks = [self.alpha * self.count_entailment(temp_kb,belief) + self.beta / self.count_literals(belief) for belief in beliefs]
-        return list(zip(beliefs,ranks))
-
-    def fetch_sample_thesis(self):
-        """"
-        Example premises is from exercises from lecture 9.
-        Thesis should end up with empty resolution, hence be True.
-        """
-        p, q, s, r = symbols("p q s r")
-        return And(p,And(s,r))
 
     def update_rank_of_existing_premise(self, sentence, rank, premises, ranks):
         """
@@ -181,7 +163,7 @@ class Knowledge_base():
         :return:
         """
         premise_idx = np.where(np.array(premises) == to_cnf(sentence))[0][0]
-        print("Premise is already in knowledge base with rank {}".format(ranks[premise_idx]))
+        logging.info("Premise is already in knowledge base with rank {}".format(ranks[premise_idx]))
         update = input("Would you like to update the rank with {}. \n Type 'y' for yes and 'n' for no".format(rank))
         while update not in ['y', 'n']:
             update = input("Your input is not valid. Type 'y' for yes and 'n' for no")
@@ -226,7 +208,7 @@ class Knowledge_base():
                     if entails:
                         if not rank1 < rank2:
                             if not automatically_fix_weights:
-                                print("Dominance postulate is violated")
+                                logging.debug("Dominance postulate is violated")
                                 stop = self.adjust_weights_for_dominance(automatically_fix_weights,idx_1, idx_2, rank1, rank2)
                                 if stop:
                                     return
@@ -286,12 +268,12 @@ class Knowledge_base():
             for belief in remainder:
                 temp_remainder_score +=  self.alpha * self.count_entailment(original_KB,belief) + self.beta / self.count_literals(belief)
             remainder_scores.append(temp_remainder_score)
-        print(remainders)
-        print("Remainder scores: ",remainder_scores)
+        logging.debug('Remainders: {}'.format(remainders))
+        logging.debug('Remainder scores: {}'.format(remainder_scores))
         remainders_ranks = np.argsort(remainder_scores)
         first_remainder = [remainder for idx,remainder in enumerate(remainders) if idx == np.where(remainders_ranks==0)[0][0]]
         second_remainder = [remainder for idx,remainder in enumerate(remainders) if idx == np.where(remainders_ranks==1)[0][0]]
-        print("Ranks:",remainders_ranks)
+        logging.debug("Remainder ranks: {}".format(remainders_ranks))
         new_KB = self.partial_meet(first_remainder,second_remainder)
         ranks = [self.alpha * self.count_entailment(original_KB,belief) + self.beta / self.count_literals(belief) for belief in new_KB]
         return [(belief,rank) for belief,rank in zip(new_KB,ranks)]
@@ -335,7 +317,7 @@ class Knowledge_base():
             new_KB = self.selection_function(original_KB, all_remainders)
         else:
             new_KB = self.selection_function(original_KB, [remainder, remainder])
-        print("UPDATE INPUT INDICES")
+        logging.warning("UPDATE INPUT INDICES")
 
     def revise(self, formula, rank):
         self.contract(Not(formula))

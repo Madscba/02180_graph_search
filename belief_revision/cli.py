@@ -5,6 +5,7 @@ import inspect
 
 from sympy import symbols
 from sympy.core.sympify import sympify
+from sympy.logic.boolalg import And, Or, Not, Implies
 
 from kb import Knowledge_base
 
@@ -48,6 +49,9 @@ class Cli(cmd.Cmd):
         print()
         print(self.kb)
         print()
+    def do_reset(self, line):
+        'Empty the knowledge base'
+        self.kb.reset()
     def do_quit(self, line):
         'Exit the program'
         return True
@@ -56,7 +60,7 @@ class Cli(cmd.Cmd):
         return True
     def do_help(self, line):
         if not line:
-            print('\n-- Available commands: expand contract revise print quit (type "help <command>" for more information)')
+            print('\n-- Available commands: contract expand print quit reset revise (type "help <command>" for more information)')
             print('-- Format for expressions: ~p (NOT), p&q (AND), p|q (OR), p>>q (IMPLICATION)')
             return
         if f'do_{line}' in dir(self):
@@ -67,6 +71,10 @@ class Cli(cmd.Cmd):
         self.do_help('')
         pass
     def preloop(self):
+        print('\nInitialising Knowledge Base...\n')
+        for belief, rank in generate_initial_beliefs():
+            self.kb.revise(belief, rank)
+        print(self.kb)
         self.do_help('')
     def precmd(self, line):
         return line
@@ -77,6 +85,20 @@ class Cli(cmd.Cmd):
         print('\n\nFinal KB:')
         self.do_print('')
 
+
+def generate_initial_beliefs():
+    """Example premises is from exercises from lecture 9"""
+    p, q, s, r = symbols("p q s r")
+    return [
+        (Implies(Not(p), q), 2.0),
+        (Implies(q, p), 2.0),
+        (Implies(p, And(r, s)), 1.67)
+    ]
+    # beliefs = [to_cnf(belief) for belief in beliefs]
+    # temp_ranks = np.arange(5)
+    # temp_kb = list(zip(beliefs,temp_ranks))
+    # ranks = [1.0 * self.count_entailment(temp_kb,belief) + self.beta / self.count_literals(belief) for belief in beliefs]
+    # return list(zip(beliefs,ranks))
 
 
 # def main1():
