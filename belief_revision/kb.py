@@ -188,7 +188,7 @@ class Knowledge_base():
         """
         assert isinstance(rank, float) or isinstance(rank, int), "rank is not of the right type: {0}".format(type(rank))
         premises = self.fetch_premises()
-        ranks =  self.fetch_ranks
+        ranks =  self.fetch_ranks()
 
         if not is_cnf(sentence):
             sentence = to_cnf(sentence)
