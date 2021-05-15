@@ -126,7 +126,6 @@ def get_remainders(beliefs, formula):
         return set([frozenset(beliefs)]) # Using frozenset to be able to nest a set into a set
     logging.debug(f'Formula {Not(formula)} is not satisfiable with {beliefs}')
     all_remainders = set()
-    #Todo MADS: We want to keep beliefs with higher epistemic entrenchment. In order for us to use the entrenchment based contraction,
     for belief in beliefs:
         # Recursively test all possible subsets by removing one belief at a time
         remainders_excluding_belief = get_remainders(beliefs - set([belief]), formula)
@@ -143,7 +142,10 @@ class Knowledge_base():
     
     """
     def __init__(self):
+        self.alpha = 1 #entailment weight (used in evaluation of premise)
+        self.beta = 2 #literal length weight (used in evaluation of premise)
         self.premises = self.fetch_initial_axioms()
+
 
     def fetch_premises(self):
         return [premise[0] for premise in self.premises]
@@ -154,11 +156,13 @@ class Knowledge_base():
         Example premises is from exercises from lecture 9
         """
         p, q, s, r = symbols("p q s r")
-        premises = [Implies(Not(p),q),Implies(q,p),Implies(p,And(r,s))]
+        beliefs = [Implies(Not(p),q),Implies(q,p),Implies(p,And(r,s))]
         # premises = [p, q, r, Implies(p,q), Implies(q,r)]
-        premises = [to_cnf(prem) for prem in premises]
-        ranks = np.arange(len(premises))
-        return list(zip(premises,ranks))
+        beliefs = [to_cnf(belief) for belief in beliefs]
+        temp_ranks = np.arange(5)
+        temp_kb = list(zip(beliefs,temp_ranks))
+        ranks = [self.alpha * self.count_entailment(temp_kb,belief) + self.beta / self.count_literals(belief) for belief in beliefs]
+        return list(zip(beliefs,ranks))
 
     def fetch_sample_thesis(self):
         """"
@@ -199,6 +203,8 @@ class Knowledge_base():
         if not is_cnf(sentence):
             sentence = to_cnf(sentence)
 
+        if not PL_resolution([], sentence):  # if not satisfiable = contradiction
+            print("sentence is a contradiction")
         if sentence in premises:
             self.update_rank_of_existing_premise(sentence,rank,premises,ranks)
         else:
@@ -255,12 +261,61 @@ class Knowledge_base():
                 clauses.append(prem[0])
         return clauses
 
-    #def rank_function
+    def count_entailment(self,original_KB,sentence):
+        entailment_count = 0
+        for belief in original_KB:
+            if not PL_resolution([sentence],Not(belief[0])): #If the negated belief is not satisfiable, then it must follow from the sentence.
+                entailment_count +=1
+        return entailment_count
+    def count_literals(self,belief):
+        return len(belief.binary_symbols)
+    def selection_function(self,original_KB,remainders):
+        """
+        Takes in one or several remainders. Evaluates each of the remainders by summing over the value each of its beliefs. A value for a belief depends on its complexity and entrenchment.
+        From the two best remainders we will find the intersection, which corresponds to the partial meet contraction of the original belief set.
+        (if only a single remainder is given as input argument, This single remainder will be returned.
+        :param remainders:
+        :return:
+        """
+
+        remainder_scores = []
+        for remainder in remainders:
+            temp_remainder_score = 0
+            for belief in remainder:
+                temp_remainder_score +=  self.alpha * self.count_entailment(original_KB,belief) + self.beta / self.count_literals(belief)
+            remainder_scores.append(temp_remainder_score)
+        print(remainders)
+        print("Remainder scores: ",remainder_scores)
+        remainders_ranks = np.argsort(remainder_scores)
+        first_remainder = [remainder for idx,remainder in enumerate(remainders) if idx == np.where(remainders_ranks==0)[0][0]]
+        second_remainder = [remainder for idx,remainder in enumerate(remainders) if idx == np.where(remainders_ranks==1)[0][0]]
+        print("Ranks:",remainders_ranks)
+        new_KB = self.partial_meet(first_remainder,second_remainder)
+        ranks = [self.alpha * self.count_entailment(original_KB,belief) + self.beta / self.count_literals(belief) for belief in new_KB]
+        self.premises = [(belief,rank) for belief,rank in zip(new_KB,ranks)]
+        print("UPDATE INPUT INDICES")
+
+    def partial_meet(self,set1, set2):
+        """
+        Return intersection of two best remainders.
+        :param set1:
+        :param set2:
+        :return:
+        """
+        if isinstance(set1,list):
+            set1 = set1[0]
+        if isinstance(set2,list):
+            set2 = set2[0]
+        partial_meet = set1 & set2
+        if len(partial_meet) == 0: #if intersection is empty, then return remainder with highest value
+            return set1
+        return set1 & set2
 
     def contract(self, formula):
         max_remainder_length = 0
         new_beliefs = None
 
+        original_KB = self.premises
         # remove from the KB formulas identical to the one being contracted
         self.premises[:] = [premise for premise in self.premises if premise[0] != formula]
 
@@ -283,12 +338,18 @@ class Knowledge_base():
         [print(belief) for belief in new_beliefs]
         # print(f'{set(new_beliefs)}')
         print(f'---------------------------\n')
-
+        if isinstance(all_remainders,set):
+            if len(all_remainders) > 1:
+                new_KB = self.selection_function(original_KB,all_remainders)
+            else:
+                new_KB = remainder
+        print("Update premise to this new KB", new_KB)
     def __repr__(self):
         output = '=============  KB  ===============\n'
         for premise in sorted(self.premises, key=lambda x: float(x[1])):
             output += f' ({premise[1]:.2f}) {premise[0]}\n'
         return output + '=================================='
+
 
 
 def main1():
@@ -344,5 +405,6 @@ def main2():
 
 
 if __name__ == "__main__":
-    #main1()
+    # main1()
     main2()
+#
