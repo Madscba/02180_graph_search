@@ -29,8 +29,14 @@ class Cli(cmd.Cmd):
             self.do_help('expand')
             return
         belief = sympify(line)
-        rank = input('Enter the rank for this belief (e.g. "0.6"): ')
-        self.kb.add_premise(belief, float(rank))
+        while True:
+            try:
+                rank = float(input('Enter the rank for this belief (e.g. "0.6"): '))
+            except ValueError:
+                print('Invalid number')
+            else:
+                break
+        self.kb.add_premise(belief, rank)
 
     def do_contract(self, line):
         'Remove a belief from the KB. Example: "contract p>>q"'
@@ -46,8 +52,14 @@ class Cli(cmd.Cmd):
             self.do_help('revise')
             return
         belief = sympify(line)
-        rank = input('Enter the rank for this belief (e.g. "0.6"): ')
-        self.kb.revise(belief, float(rank))
+        while True:
+            try:
+                rank = float(input('Enter the rank for this belief (e.g. "0.6"): '))
+            except ValueError:
+                print('Invalid number')
+            else:
+                break
+        self.kb.revise(belief, rank)
 
     def do_print(self, line):
         'Print the knowledge base'
