@@ -3,8 +3,8 @@ import os
 from collections.abc import Iterable
 
 import numpy as np
-from sympy import symbols, simplify
-from sympy.logic.boolalg import And,Or, Not, Implies, Equivalent, distribute_and_over_or, distribute_or_over_and, is_cnf,to_cnf
+from sympy import symbols
+from sympy.logic.boolalg import And,Or, Not, Implies, is_cnf, to_cnf
 
 logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO"),
@@ -12,21 +12,20 @@ logging.basicConfig(
 )
 
 
-def Biconditional(a,b):
+def Biconditional(a, b):
     """
     rewrite biconditional as a new premise consisting of two implies according to formula in Peter Norvig & Stuart Russel Chapter 7
     replacing alpha <=> beta with (alpha => beta) and (beta => alpha)
     """
-    return And(Implies(a,b),Implies(b,a))
+    return And(Implies(a, b), Implies(b, a))
 
 def dissociate(op, args):
     """Given an associative op, return a flattened list result such
     that Expr(op, *result) means the same as Expr(op, *args).
-   # >>> dissociate('&', [A & B])
+    # >>> dissociate('&', [A & B])
     [A, B]
     """
     result = []
-
     def collect(subargs):
         for arg in subargs:
             if arg.func == op:
@@ -47,7 +46,6 @@ def associate(op, args):
     (A | B | C | (A & B))
     """
     args = dissociate(op, args)
-    
     if len(args) == 0:
         return op.identity
     elif len(args) == 1:
@@ -66,7 +64,7 @@ def remove_all(item, seq):
     else:
         return [x for x in seq if x != item]
 
-def PL_resolution(premises,alpha):
+def PL_resolution(premises, alpha):
     alpha = to_cnf(alpha)
     alpha = dissociate(And,[alpha])
     clauses = alpha
@@ -88,7 +86,7 @@ def PL_resolution(premises,alpha):
             if c not in clauses:
                 clauses.append(c)
 
-def PL_resolve(ci,cj):
+def PL_resolve(ci, cj):
     clauses = []
     ci = dissociate(Or, [ci]) #Disjuncts
     cj = dissociate(Or, [cj]) #Disjuncts
@@ -146,11 +144,12 @@ class Knowledge_base():
         self.beta = 2 #literal length weight (used in evaluation of premise)
         self.premises = self.fetch_initial_axioms()
 
-
     def fetch_premises(self):
         return [premise[0] for premise in self.premises]
+
     def fetch_ranks(self):
         return [premise[1] for premise in self.premises]
+
     def fetch_initial_axioms(self):
         """"
         Example premises is from exercises from lecture 9
@@ -172,7 +171,7 @@ class Knowledge_base():
         p, q, s, r = symbols("p q s r")
         return And(p,And(s,r))
 
-    def update_rank_of_existing_premise(self,sentence,rank,premises, ranks):
+    def update_rank_of_existing_premise(self, sentence, rank, premises, ranks):
         """
         User tried to add a premise already in KB. User can either update it or leave it be.
         :param sentence: premise
@@ -190,13 +189,13 @@ class Knowledge_base():
             self.premises.remove(self.premises[premise_idx])
             self.premises.append((sentence, rank))
 
-    def add_premise(self,sentence,rank):
+    def add_premise(self, sentence, rank):
         """
         :param sentence: sentence to be added
         :param rank: rank corresponding to sentence.
         :return:
         """
-        assert isinstance(rank,float) or isinstance(rank,int), "rank is not of the right type: {0}".format(type(rank))
+        assert isinstance(rank, float) or isinstance(rank, int), "rank is not of the right type: {0}".format(type(rank))
         premises = self.fetch_premises()
         ranks =  self.fetch_ranks
 
@@ -214,8 +213,7 @@ class Knowledge_base():
         else:
             self.premises.append((sentence,rank))
 
-
-    def check_dominance(self,automatically_fix_weights = False):
+    def check_dominance(self, automatically_fix_weights=False):
         """
         Check to see whether premises fulfils the third epistemic postulate (Dominance):
         if p |= q, then p <= q.
@@ -235,20 +233,19 @@ class Knowledge_base():
                             else:
                                 self.adjust_weights_for_dominance(True,idx_1,idx_2,rank1,rank2)
 
-    def adjust_weights_for_dominance(self,automatically_fix_weights, idx_1,idx_2,rank1,rank2):
+    def adjust_weights_for_dominance(self, automatically_fix_weights, idx_1, idx_2, rank1, rank2):
         if automatically_fix_weights == False:
             adjust = input("Do you want to automatically adjust weights to satisfy dominance postulate.\n Type 'y' for yes and 'n' for no")
             while adjust not in ['y', 'n']:
                 adjust = input("Your input is not valid. Type 'y' for yes and 'n' for no")
             if adjust == 'y':
                 self.premises[idx_2][1] += abs(rank1-rank2)
-                self.check_dominance(automatically_fix_weights = True)
+                self.check_dominance(automatically_fix_weights=True)
             return False
         else:
             self.check_dominance(automatically_fix_weights=True)
 
-
-    def to_clauses(self,premises=None):
+    def to_clauses(self, premises=None):
         """
         OBS: DOES NOT WORK YET!  
 
@@ -265,15 +262,17 @@ class Knowledge_base():
                 clauses.append(prem[0])
         return clauses
 
-    def count_entailment(self,original_KB,sentence):
+    def count_entailment(self, original_KB, sentence):
         entailment_count = 0
         for belief in original_KB:
             if not PL_resolution([sentence],Not(belief[0])): #If the negated belief is not satisfiable, then it must follow from the sentence.
                 entailment_count +=1
         return entailment_count
-    def count_literals(self,belief):
+
+    def count_literals(self, belief):
         return len(belief.binary_symbols)
-    def selection_function(self,original_KB,remainders):
+
+    def selection_function(self, original_KB, remainders):
         """
         Takes in one or several remainders. Evaluates each of the remainders by summing over the value each of its beliefs. A value for a belief depends on its complexity and entrenchment.
         From the two best remainders we will find the intersection, which corresponds to the partial meet contraction of the original belief set.
@@ -281,7 +280,6 @@ class Knowledge_base():
         :param remainders:
         :return:
         """
-
         remainder_scores = []
         for remainder in remainders:
             temp_remainder_score = 0
@@ -298,16 +296,16 @@ class Knowledge_base():
         ranks = [self.alpha * self.count_entailment(original_KB,belief) + self.beta / self.count_literals(belief) for belief in new_KB]
         return [(belief,rank) for belief,rank in zip(new_KB,ranks)]
 
-    def partial_meet(self,set1, set2):
+    def partial_meet(self, set1, set2):
         """
         Return intersection of two best remainders.
         :param set1:
         :param set2:
         :return:
         """
-        if isinstance(set1,list):
+        if isinstance(set1, list):
             set1 = set1[0]
-        if isinstance(set2,list):
+        if isinstance(set2, list):
             set2 = set2[0]
         partial_meet = set1 & set2
         if len(partial_meet) == 0: #if intersection is empty, then return remainder with highest value
