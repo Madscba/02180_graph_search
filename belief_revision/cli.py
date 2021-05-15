@@ -64,12 +64,14 @@ class Cli(cmd.Cmd):
         return True
 
     def do_EOF(self, line):
-        'Quit'
         return True
 
     def do_help(self, line):
         if not line:
-            print('\n-- Available commands: contract expand print quit reset revise (type "help <command>" for more information)')
+            main_commands = sorted(
+                [cmd[3:] for cmd in dir(self.__class__) if cmd.startswith('do_') and getattr(self, cmd).__doc__]
+            )
+            print(f'\n-- Available commands: {" ".join(main_commands)} (type "help <command>" for more information)')
             print('-- Format for expressions: ~p (NOT), p&q (AND), p|q (OR), p>>q (IMPLICATION)')
             return
         if f'do_{line}' in dir(self):
