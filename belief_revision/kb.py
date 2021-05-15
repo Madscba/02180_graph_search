@@ -130,7 +130,16 @@ def get_remainders(beliefs, formula):
         for remainder in remainders_excluding_belief:
             if remainder:
                 all_remainders.add(remainder)
-    return all_remainders
+    maximal_remainders = set()
+    for candidate_remainder in all_remainders:
+        is_maximal = True
+        for another_remainder in all_remainders - set(candidate_remainder):
+            if candidate_remainder.issubset(another_remainder):
+                is_maximal = False
+                break
+        if is_maximal:
+            maximal_remainders.add(candidate_remainder)
+    return maximal_remainders
 
 
 class Knowledge_base():
@@ -179,7 +188,7 @@ class Knowledge_base():
         """
         assert isinstance(rank, float) or isinstance(rank, int), "rank is not of the right type: {0}".format(type(rank))
         premises = self.fetch_premises()
-        ranks =  self.fetch_ranks
+        ranks =  self.fetch_ranks()
 
         if not is_cnf(sentence):
             sentence = to_cnf(sentence)
