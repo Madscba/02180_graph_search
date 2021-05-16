@@ -134,11 +134,18 @@ def get_remainders(beliefs, formula):
     maximal_remainders = set()
     for candidate_remainder in all_remainders:
         is_maximal = True
-        for another_remainder in all_remainders - set(candidate_remainder):
+        for another_remainder in all_remainders:
+            if another_remainder == candidate_remainder:
+                continue
             if candidate_remainder.issubset(another_remainder):
                 is_maximal = False
+                logging.debug('Remainder {} is subset of {}'.format(
+                    candidate_remainder,
+                    another_remainder
+                ))
                 break
         if is_maximal:
+            logging.debug('Remainder {} is maximal'.format(candidate_remainder))
             maximal_remainders.add(candidate_remainder)
     return maximal_remainders
 
