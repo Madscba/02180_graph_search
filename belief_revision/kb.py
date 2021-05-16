@@ -3,7 +3,7 @@ import os
 from collections.abc import Iterable
 
 import numpy as np
-from sympy import symbols
+from sympy import symbols, Symbol
 from sympy.logic.boolalg import And, Or, Not, Implies, is_cnf, to_cnf
 
 logging.basicConfig(
@@ -40,9 +40,9 @@ def associate(op, args):
     """Given an associative op, return an expression with the same
     meaning as Expr(op, *args), but flattened -- that is, with nested
     instances of the same op promoted to the top level.
-    #>>> associate('&', [(A&B),(B|C),(B&C)])
+    #>>> associate(And, [(A&B),(B|C),(B&C)])
     (A & B & (B | C) & B & C)
-    #>>> associate('|', [A|(B|(C|(A&B)))])
+    #>>> associate(Or, [A|(B|(C|(A&B)))])
     (A | B | C | (A & B))
     """
     args = dissociate(op, args)
@@ -100,9 +100,7 @@ def PL_resolve(ci, cj):
     for di in ci:
         for dj in cj:
             if di == ~dj:
-                resolve = list(set(remove_all(di, ci) + remove_all(dj, cj)))
-                if len(resolve)==0:
-                    resolve = [False]
+                resolve = [associate(Or,list(set(remove_all(di, ci) + remove_all(dj, cj))))]
                 clauses+= resolve
     return clauses
 
