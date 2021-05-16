@@ -54,14 +54,8 @@ class Cli(cmd.Cmd):
             self.do_help('revise')
             return
         belief = sympify(line)
-        while True:
-            try:
-                rank = float(input('Enter the rank for this belief (e.g. "0.6"): '))
-            except ValueError:
-                print('Invalid number')
-            else:
-                break
-        self.kb.revise(belief, rank)
+
+        self.kb.revise(belief)
     def do_agm(self,line):
         'Test the KB on AGM postulates with a phi and a psi.Split with "-". Example: "agm p>>q - q | p"'
         if not line:

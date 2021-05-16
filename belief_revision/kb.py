@@ -170,47 +170,29 @@ class Knowledge_base():
     def fetch_ranks(self):
         return [premise[1] for premise in self.premises]
 
-    def update_rank_of_existing_premise(self, sentence, rank, premises, ranks):
+    def update_ranks_of_existing_premises(self, premises):
         """
-        User tried to add a premise already in KB. User can either update it or leave it be.
-        :param sentence: premise
-        :param rank: user input rank (The potential new rank)
-        :param premises:  [premise[0] for premise in self.premises]
-        :param ranks:   [premise[1] for premise in self.premises]
-        :return:
+        Calculate ranks of premises, and return updated ranks
         """
-        premise_idx = np.where(np.array(premises) == to_cnf(sentence))[0][0]
-        logging.info("Premise is already in knowledge base with rank {}".format(ranks[premise_idx]))
-        update = input("Would you like to update the rank with {}. \n Type 'y' for yes and 'n' for no".format(rank))
-        while update not in ['y', 'n']:
-            update = input("Your input is not valid. Type 'y' for yes and 'n' for no")
-        if update == "y":
-            self.premises.remove(self.premises[premise_idx])
-            self.premises.append((sentence, rank))
+        return [self.alpha * self.count_entailment(premises,premise) + self.beta / self.count_literals(premise) for premise in premises]
 
-    def add_premise(self, sentence, rank):
+    def add_premise(self, sentence):
         """
         :param sentence: sentence to be added
         :param rank: rank corresponding to sentence.
         :return:
         """
-        assert isinstance(rank, float) or isinstance(rank, int), "rank is not of the right type: {0}".format(type(rank))
         premises = self.fetch_premises()
-        ranks =  self.fetch_ranks()
 
-        if not is_cnf(sentence):
-            sentence = to_cnf(sentence)
-
-        if not PL_resolution([], sentence):  # if not satisfiable = contradiction
-            logging.error(f'{sentence} is a contradiction, skipping.')
+        if not PL_resolution(premises, sentence):
+            logging.error(f'{sentence} would introduce a contradiction in the KB, skipping. Consider using revision instead.')
             return
-        # if not PL_resolution(premises, sentence):
-        #     logging.error(f'{sentence} would introduce a contradiction in the KB, skipping. Consider using revision instead.')
-        #     return
-        if sentence in premises:
-            self.update_rank_of_existing_premise(sentence,rank,premises,ranks)
-        else:
-            self.premises.append((sentence,rank))
+        premises = premises.append(sentence)
+
+        updated_ranks = self.update_ranks_of_existing_premises(premises)
+
+        self.premises = [(belief,rank) for belief,rank in zip(premises,updated_ranks)] #zip updated ranks and premises and store in
+        
 
     def check_dominance(self, automatically_fix_weights=False):
         """
@@ -315,7 +297,6 @@ class Knowledge_base():
         max_remainder_length = 0
         new_beliefs = None
 
-        original_KB = self.premises
         # remove from the KB formulas identical to the one being contracted
         self.premises[:] = [premise for premise in self.premises if premise[0] != formula]
 
@@ -331,17 +312,16 @@ class Knowledge_base():
             else: # just watching out for bugs
                 raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
         if len(all_remainders) > 1:
-            new_KB = self.selection_function(original_KB, all_remainders)
+            new_KB = self.selection_function(self.premises, all_remainders)
         elif len(all_remainders) == 1:
-            new_KB = self.selection_function(original_KB, [remainder, remainder])
+            new_KB = self.selection_function(self.premises, [remainder, remainder])
         else:
             self.reset()
         self.premises = new_KB
-        logging.warning("UPDATE INPUT INDICES")
 
-    def revise(self, formula, rank):
+    def revise(self, formula):
         self.contract(Not(formula))
-        self.add_premise(formula, rank)
+        self.add_premise(formula)
 
     def __repr__(self):
         output = '=============  KB  ===============\n'
