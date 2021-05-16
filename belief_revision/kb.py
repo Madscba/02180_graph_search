@@ -244,23 +244,6 @@ class Knowledge_base():
         else:
             self.check_dominance(automatically_fix_weights=True)
 
-    def to_clauses(self, premises=None):
-        """
-        OBS: DOES NOT WORK YET!  
-
-        turn premises into disjunctions of literals
-        """
-        clauses = []
-        if not premises: #Performs on KB
-            premises = self.premises
-        for prem in premises:
-            if prem[0].func == And:
-                for clause in prem[0].args:
-                    clauses.append(clause)
-            else:
-                clauses.append(prem[0])
-        return clauses
-
     def count_entailment(self, original_KB, sentence):
         entailment_count = 0
         for belief in original_KB:
@@ -337,7 +320,6 @@ class Knowledge_base():
         else:
             self.reset()
         self.premises = new_KB
-        logging.warning("UPDATE INPUT INDICES")
 
     def revise(self, formula, rank):
         self.contract(Not(formula))
