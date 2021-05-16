@@ -119,8 +119,8 @@ def get_remainders(beliefs, formula):
         logging.warning(f'PL_resolution({beliefs}, {Not(formula)})={resolution} HOWEVER satisfiable={is_satisfiable}')
     else:
         logging.debug(f'PL_resolution({beliefs}, {Not(formula)})={resolution} AGREES with satisfiable={is_satisfiable}')
-    # if resolution:
-    if is_satisfiable:
+    if resolution:
+    # if is_satisfiable:
         logging.debug(f'Formula {Not(formula)} is satisfiable with {beliefs}')
         return set([frozenset(beliefs)]) # Using frozenset to be able to nest a set into a set
     logging.debug(f'Formula {Not(formula)} is not satisfiable with {beliefs}')
