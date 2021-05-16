@@ -313,13 +313,13 @@ class Knowledge_base():
                 logging.debug(set(remainder))
             else: # just watching out for bugs
                 raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
+
         if len(all_remainders) > 1:
-            new_KB = self.selection_function(original_KB, all_remainders)
+            self.premises = self.selection_function(original_KB, all_remainders)
         elif len(all_remainders) == 1:
-            new_KB = self.selection_function(original_KB, [remainder, remainder])
+            self.premises = self.selection_function(original_KB, [remainder, remainder])
         else:
-            self.reset()
-        self.premises = new_KB
+            self.reset() # empty the database if no possible remainders
 
     def revise(self, formula, rank):
         self.contract(Not(formula))
