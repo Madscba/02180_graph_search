@@ -264,9 +264,9 @@ class Knowledge_base():
                 raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
 
         if len(all_remainders) > 1:
-            self.premises = self.selection_function(original_KB, all_remainders)
+            self.premises = self.selection_function(self.premises, all_remainders)
         elif len(all_remainders) == 1:
-            self.premises = self.selection_function(original_KB, [remainder, remainder])
+            self.premises = self.selection_function(self.premises, [remainder, remainder])
         else:
             self.reset() # empty the database if no possible remainders
 
