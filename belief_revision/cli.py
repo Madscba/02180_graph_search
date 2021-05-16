@@ -67,6 +67,7 @@ class Cli(cmd.Cmd):
         if not line:
             self.do_help('agm')
             return
+        #Save KB
         pickle.dump(self.kb,open("temp.pickle","wb"))
         phi = to_cnf(sympify(line))
         notphi = to_cnf(Not(phi))
@@ -98,7 +99,10 @@ class Cli(cmd.Cmd):
 
         #Subexpansion
         
+        #Load the prior KB
         self.kb = pickle.load(open("temp.pickle","rb"))
+        #Cleanup temp file
+        os.remove("temp.pickle")
 
     def do_print(self, line):
         'Print the knowledge base'
