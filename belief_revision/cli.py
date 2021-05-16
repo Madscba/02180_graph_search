@@ -63,18 +63,29 @@ class Cli(cmd.Cmd):
                 break
         self.kb.revise(belief, rank)
     def do_agm(self,line):
-        'Test the KB on AGM postulates with a phi. Example: "agm p>>q"'
+        'Test the KB on AGM postulates with a phi and a psi.Split with "-". Example: "agm p>>q - q | p"'
         if not line:
             self.do_help('agm')
             return
         #Save KB
+        line = line.split("-")
+        if len(line)==1:
+            phi = to_cnf(sympify(line[0]))
+            psi = False
+        elif len(line)==2:
+            phi = to_cnf(sympify(line[0]))
+            psi = to_cnf(sympify(line[1]))
+        else:
+            print("More than two inputs")
         pickle.dump(self.kb,open("temp.pickle","wb"))
-        phi = to_cnf(sympify(line))
         notphi = to_cnf(Not(phi))
         baseline = self.kb.fetch_premises()
         appended = list(set(baseline+[phi]))
         self.kb.revise(phi,1)
         revised = self.kb.fetch_premises()
+        #print(baseline)
+        #print(appended)
+        #print(revised)
         #Closure
 
         #Success
@@ -92,12 +103,15 @@ class Cli(cmd.Cmd):
             print(f"Consistency: {PL_resolution([],revised)}")
         else:
             print("Consistency: Can not be determined since phi isnt consistent")
+        if psi:
+            True
+            #Extensionality
 
-        #Extensionality
+            #Superexpansion
 
-        #Superexpansion
-
-        #Subexpansion
+            #Subexpansion
+        else:
+            "No psi given for last 3 postulates"
         
         #Load the prior KB
         self.kb = pickle.load(open("temp.pickle","rb"))
