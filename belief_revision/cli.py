@@ -57,7 +57,7 @@ class Cli(cmd.Cmd):
 
         self.kb.revise(belief)
     def do_agm(self,line):
-        'Test the KB on AGM postulates with a phi and a psi.Split with "-". Example: "agm p>>q - q | p"'
+        'Test the KB on AGM postulates with a phi and a psi. Split with "-". Example: "agm p>>q - q | p"'
         if not line:
             self.do_help('agm')
             return
