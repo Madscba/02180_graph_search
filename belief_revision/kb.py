@@ -66,20 +66,27 @@ def remove_all(item, seq):
 
 def PL_resolution(premises, alpha):
     alpha = to_cnf(alpha)
-    alpha = dissociate(And,[alpha])
+    if isinstance(alpha,list):
+        alpha = dissociate(And,alpha)
+    else:
+        alpha = dissociate(And,[alpha])
     clauses = alpha
     for i in premises:
         clauses += dissociate(And,[i])
     new = set()
+    #print("Clauses init: ",clauses)
     while True:
         n = len(clauses)
+        
         pairs = [(clauses[i], clauses[j])
                 for i in range(n) for j in range(i + 1, n)]
         for (ci, cj) in pairs:
             resolvents = PL_resolve(ci, cj)
             if False in resolvents:
+                #print("exit clauses", clauses)
                 return False
             new = new.union(set(resolvents))
+        #print("new: ", new)
         if new.issubset(set(clauses)):
             return True
         for c in new:
