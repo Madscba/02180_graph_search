@@ -119,8 +119,8 @@ def get_remainders(beliefs, formula):
         logging.warning(f'PL_resolution({beliefs}, {Not(formula)})={resolution} HOWEVER satisfiable={is_satisfiable}')
     else:
         logging.debug(f'PL_resolution({beliefs}, {Not(formula)})={resolution} AGREES with satisfiable={is_satisfiable}')
-    # if resolution:
-    if is_satisfiable:
+    if resolution:
+    # if is_satisfiable:
         logging.debug(f'Formula {Not(formula)} is satisfiable with {beliefs}')
         return set([frozenset(beliefs)]) # Using frozenset to be able to nest a set into a set
     logging.debug(f'Formula {Not(formula)} is not satisfiable with {beliefs}')
@@ -244,23 +244,6 @@ class Knowledge_base():
         else:
             self.check_dominance(automatically_fix_weights=True)
 
-    def to_clauses(self, premises=None):
-        """
-        OBS: DOES NOT WORK YET!  
-
-        turn premises into disjunctions of literals
-        """
-        clauses = []
-        if not premises: #Performs on KB
-            premises = self.premises
-        for prem in premises:
-            if prem[0].func == And:
-                for clause in prem[0].args:
-                    clauses.append(clause)
-            else:
-                clauses.append(prem[0])
-        return clauses
-
     def count_entailment(self, original_KB, sentence):
         entailment_count = 0
         for belief in original_KB:
@@ -330,14 +313,13 @@ class Knowledge_base():
                 logging.debug(set(remainder))
             else: # just watching out for bugs
                 raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
+
         if len(all_remainders) > 1:
-            new_KB = self.selection_function(original_KB, all_remainders)
+            self.premises = self.selection_function(original_KB, all_remainders)
         elif len(all_remainders) == 1:
-            new_KB = self.selection_function(original_KB, [remainder, remainder])
+            self.premises = self.selection_function(original_KB, [remainder, remainder])
         else:
-            self.reset()
-        self.premises = new_KB
-        logging.warning("UPDATE INPUT INDICES")
+            self.reset() # empty the database if no possible remainders
 
     def revise(self, formula, rank):
         self.contract(Not(formula))
