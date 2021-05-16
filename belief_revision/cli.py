@@ -74,9 +74,6 @@ class Cli(cmd.Cmd):
         appended = list(set(baseline+[phi]))
         self.kb.revise(phi,1)
         revised = self.kb.fetch_premises()
-        print(baseline)
-        print(appended)
-        print(revised)
         #Closure
 
         #Success
