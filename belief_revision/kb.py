@@ -192,39 +192,7 @@ class Knowledge_base():
         updated_ranks = self.update_ranks_of_existing_premises(premises)
 
         self.premises = [(belief,rank) for belief,rank in zip(premises,updated_ranks)] #zip updated ranks and premises and store in
-        
 
-    def check_dominance(self, automatically_fix_weights=False):
-        """
-        Check to see whether premises fulfils the third epistemic postulate (Dominance):
-        if p |= q, then p <= q.
-        If p entails q, then q has larger or equal epistemic entrenchment
-        """
-        for idx_1,premise1,rank1 in enumerate(self.premises):
-            for idx_2,premise2,rank2 in enumerate(self.premises):
-                if premise1 != premise2:
-                    entails = PL_resolution(premise1,premise2)
-                    if entails:
-                        if not rank1 < rank2:
-                            if not automatically_fix_weights:
-                                logging.debug("Dominance postulate is violated")
-                                stop = self.adjust_weights_for_dominance(automatically_fix_weights,idx_1, idx_2, rank1, rank2)
-                                if stop:
-                                    return
-                            else:
-                                self.adjust_weights_for_dominance(True,idx_1,idx_2,rank1,rank2)
-
-    def adjust_weights_for_dominance(self, automatically_fix_weights, idx_1, idx_2, rank1, rank2):
-        if automatically_fix_weights == False:
-            adjust = input("Do you want to automatically adjust weights to satisfy dominance postulate.\n Type 'y' for yes and 'n' for no")
-            while adjust not in ['y', 'n']:
-                adjust = input("Your input is not valid. Type 'y' for yes and 'n' for no")
-            if adjust == 'y':
-                self.premises[idx_2][1] += abs(rank1-rank2)
-                self.check_dominance(automatically_fix_weights=True)
-            return False
-        else:
-            self.check_dominance(automatically_fix_weights=True)
 
     def count_entailment(self, original_KB, sentence):
         entailment_count = 0
