@@ -336,6 +336,7 @@ class Knowledge_base():
             new_KB = self.selection_function(original_KB, [remainder, remainder])
         else:
             self.reset()
+        self.premises = new_KB
         logging.warning("UPDATE INPUT INDICES")
 
     def revise(self, formula, rank):
