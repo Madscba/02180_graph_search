@@ -19,7 +19,7 @@ logging.basicConfig(
 
 class Cli(cmd.Cmd):
     # intro = '\nBelief Revision engine\n\n'
-    prompt = '> '
+    prompt = '\n\n> '
 
     def __init__(self, kb, **kwargs):
         super().__init__(**kwargs)
@@ -39,6 +39,7 @@ class Cli(cmd.Cmd):
             else:
                 break
         self.kb.add_premise(belief, rank)
+        self.do_print(line)
 
     def do_contract(self, line):
         'Remove a belief from the KB. Example: "contract p>>q"'
@@ -47,6 +48,7 @@ class Cli(cmd.Cmd):
             return
         belief = sympify(line)
         self.kb.contract(belief)
+        self.do_print(line)
 
     def do_revise(self, line):
         'Add a belief and delete other beliefs as necessary to keep consistency. Example: "revise p>>q"'
@@ -62,8 +64,10 @@ class Cli(cmd.Cmd):
             else:
                 break
         self.kb.revise(belief, rank)
+        self.do_print(line)
+
     def do_agm(self,line):
-        'Test the KB on AGM postulates with a phi and a psi.Split with "-". Example: "agm p>>q - q | p"'
+        'Test the KB on AGM postulates with a phi and a psi. Split with "-". Example: "agm p>>q - q | p"'
         if not line:
             self.do_help('agm')
             return
@@ -120,13 +124,12 @@ class Cli(cmd.Cmd):
 
     def do_print(self, line):
         'Print the knowledge base'
-        print()
         print(self.kb)
-        print()
 
     def do_reset(self, line):
         'Empty the knowledge base'
         self.kb.reset()
+        self.do_print(line)
 
     def do_quit(self, line):
         'Exit the program'
@@ -137,9 +140,10 @@ class Cli(cmd.Cmd):
 
     def do_help(self, line):
         if not line:
-            main_commands = sorted(
-                [cmd[3:] for cmd in dir(self.__class__) if cmd.startswith('do_') and getattr(self, cmd).__doc__]
-            )
+            # main_commands = sorted(
+            #     [cmd[3:] for cmd in dir(self.__class__) if cmd.startswith('do_') and getattr(self, cmd).__doc__]
+            # )
+            main_commands = ['revise', 'contract', 'expand', 'agm', 'print', 'reset', 'quit']
             print(f'\n-- Available commands: {" ".join(main_commands)} (type "help <command>" for more information)')
             print('-- Format for expressions: ~p (NOT), p&q (AND), p|q (OR), p>>q (IMPLICATION)')
             return
@@ -150,7 +154,6 @@ class Cli(cmd.Cmd):
 
     def emptyline(self):
         self.do_help('')
-        pass
 
     def preloop(self):
         print('\nInitialising Knowledge Base...\n')
@@ -163,7 +166,6 @@ class Cli(cmd.Cmd):
         return line
 
     def postcmd(self, stop, line):
-        # print(f'postcmd: line={line}')
         return stop
 
     def postloop(self):
