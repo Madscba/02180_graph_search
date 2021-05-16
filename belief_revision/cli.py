@@ -71,7 +71,7 @@ class Cli(cmd.Cmd):
         phi = to_cnf(sympify(line))
         notphi = to_cnf(Not(phi))
         baseline = self.kb.fetch_premises()
-        appended = baseline+[phi]
+        appended = list(set(baseline+[phi]))
         self.kb.revise(phi,1)
         revised = self.kb.fetch_premises()
         print(baseline)
