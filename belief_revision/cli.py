@@ -213,55 +213,6 @@ def generate_initial_beliefs():
         Implies(q, p),
         Implies(p, And(r, s))
     ]
-    # beliefs = [to_cnf(belief) for belief in beliefs]
-    # temp_ranks = np.arange(5)
-    # temp_kb = list(zip(beliefs,temp_ranks))
-    # ranks = [1.0 * self.count_entailment(temp_kb,belief) + self.beta / self.count_literals(belief) for belief in beliefs]
-    # return list(zip(beliefs,ranks))
-
-
-# def main1():
-#     KB = Knowledge_base()
-
-#     #Use sympy to return boolean value
-#     x,y,r,s = symbols("x y r s")
-#     ###Resolve test
-#     alpha = KB.fetch_sample_thesis()
-#     premises = []
-#     for premis in KB.premises:
-#         premises += [premis[0]]
-#     print("Resolution: ",PL_resolution(premises,alpha))
-    
-#     exp = Implies(x,y)
-#     print(exp.subs(x, False))
-
-#     #Example add a premise to KB
-#     [print(f"rank {prem[1]} {prem[0]}") for prem in KB.premises]
-#     KB.add_premise(exp,5)
-#     print(KB)
-#     KB.add_premise(exp,"2")
-#     print(KB)
-#     KB.add_premise(exp,4)
-#     print(KB)
-
-#     print("#"*20)
-#     [print(f"rank {prem[1]} {prem[0]}") for prem in KB.premises]
-#     print("#" * 20)
-
-#     #Try to make to_clause function to work with example from book:
-#     """Example from book: Chapter 7.5.2 Proof by resolution (book version 4), subsection "Conjunctive normal form"
-#     B1, 1 ⇔ (P1, 2 ∨ P2, 1) should be turned into 3 clauses:
-#     (¬B1, 1 ∨ P1, 2 ∨ P2, 1) ∧ (¬P1, 2 ∨ B1, 1) ∧ (¬P2, 1 ∨ B1, 1)
-#     """
-#     b1, p1, p2 = symbols("b1 p1 p2")
-#     s = symbols("s")
-#     exp1 = Biconditional(b1, Or(p1, p2))
-#     exp2 = Or(s, s)
-#     ranks = np.arange(2)
-#     premises = [to_cnf(exp) for exp in [exp1, exp2]]
-#     init_exp = list(zip(premises, ranks))
-#     clauses = KB.to_clauses(init_exp)
-#     print(clauses)
 
 
 if __name__ == "__main__":
