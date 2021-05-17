@@ -187,13 +187,13 @@ class Knowledge_base():
         premises = self.fetch_premises()
 
         if not PL_resolution(premises, sentence):
-            logging.error(f'{sentence} would introduce a contradiction in the KB, skipping. Consider using revision instead.')
-            return
+            logging.error(f'{sentence} would introduce a contradiction in the KB, skipping.')
+            return None
 
         premises.append(sentence)
         updated_ranks = self.update_ranks_of_existing_premises(premises)
         self.premises = [(belief,rank) for belief,rank in zip(premises,updated_ranks)] #zip updated ranks and premises and store in
-
+        return sentence
 
     def count_entailment(self, original_KB, sentence):
         entailment_count = 0
@@ -270,7 +270,7 @@ class Knowledge_base():
 
     def revise(self, formula):
         self.contract(Not(formula))
-        self.add_premise(formula)
+        return self.add_premise(formula)
 
     def __repr__(self):
         output = '=============  KB  ===============\n'
