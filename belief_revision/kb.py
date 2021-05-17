@@ -182,22 +182,23 @@ class Knowledge_base():
         :param rank: rank corresponding to sentence.
         :return:
         """
+        if not is_cnf(sentence):
+            sentence = to_cnf(sentence)
         premises = self.fetch_premises()
 
         if not PL_resolution(premises, sentence):
             logging.error(f'{sentence} would introduce a contradiction in the KB, skipping. Consider using revision instead.')
             return
-        premises = premises.append(sentence)
 
+        premises.append(sentence)
         updated_ranks = self.update_ranks_of_existing_premises(premises)
-
         self.premises = [(belief,rank) for belief,rank in zip(premises,updated_ranks)] #zip updated ranks and premises and store in
 
 
     def count_entailment(self, original_KB, sentence):
         entailment_count = 0
         for belief in original_KB:
-            if not PL_resolution([sentence],Not(belief[0])): #If the negated belief is not satisfiable, then it must follow from the sentence.
+            if not PL_resolution([sentence],Not(belief)): #If the negated belief is not satisfiable, then it must follow from the sentence.
                 entailment_count +=1
         return entailment_count
 
@@ -245,9 +246,6 @@ class Knowledge_base():
         return set1 & set2
 
     def contract(self, formula):
-        max_remainder_length = 0
-        new_beliefs = None
-
         # remove from the KB formulas identical to the one being contracted
         self.premises[:] = [premise for premise in self.premises if premise[0] != formula]
 
@@ -264,9 +262,9 @@ class Knowledge_base():
                 raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
 
         if len(all_remainders) > 1:
-            self.premises = self.selection_function(self.premises, all_remainders)
+            self.premises = self.selection_function(self.fetch_premises(), all_remainders)
         elif len(all_remainders) == 1:
-            self.premises = self.selection_function(self.premises, [remainder, remainder])
+            self.premises = self.selection_function(self.fetch_premises(), [remainder, remainder])
         else:
             self.reset() # empty the database if no possible remainders
 
