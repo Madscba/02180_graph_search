@@ -100,27 +100,12 @@ def PL_resolve(ci, cj):
                 clauses+= resolve
     return clauses
 
-def satisfiable(expr, algorithm=None, all_models=False):
-    """Check satisfiability of a propositional sentence. Returns a model when it succeeds.
-    XXX TODO: Only for testing purposes. We cannot use this library, we must implement this ourselves.
-    """
-    from sympy.logic.inference import satisfiable as spsatisfiable
-    return spsatisfiable(expr, algorithm=algorithm, all_models=all_models)
-
 def get_remainders(beliefs, formula):
     """Return a set of remainders (subsets) of the KB that do not imply the given formula.
     The return value is a set of sets.
     """
     resolution = PL_resolution(beliefs, Not(formula))
-    is_satisfiable = satisfiable(
-        associate(And, beliefs | set([Not(formula)]))
-    )
-    if isinstance(is_satisfiable,dict) != resolution:
-        logging.warning(f'PL_resolution({beliefs}, {Not(formula)})={resolution} HOWEVER satisfiable={is_satisfiable}')
-    else:
-        logging.debug(f'PL_resolution({beliefs}, {Not(formula)})={resolution} AGREES with satisfiable={is_satisfiable}')
     if resolution:
-    # if is_satisfiable:
         logging.debug(f'Formula {Not(formula)} is satisfiable with {beliefs}')
         return set([frozenset(beliefs)]) # Using frozenset to be able to nest a set into a set
     logging.debug(f'Formula {Not(formula)} is not satisfiable with {beliefs}')
