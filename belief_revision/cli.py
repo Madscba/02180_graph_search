@@ -134,7 +134,7 @@ class Cli(cmd.Cmd):
                 
                 print(f'Extensionality: {set(revised)==set(revised_psi)}')
             else:
-                print("Extensionality: Can not be determinced since (phi <-> psi) is not a tautologi")
+                print("Extensionality: Can not be determined since (phi <-> psi) is not a tautologi")
 
         
             #Superexpansion
