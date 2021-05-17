@@ -43,6 +43,9 @@ python cli.py    # to run the program
 
 ## User interface
 
+The engine starts with a generic belief base, that the user can modify via `revise`, `contract` or `expand` commands.
+Use `print` to show the current belief base.
+
 The command-line interface shows the available commands and the way of formatting expressions:
 
 ```
