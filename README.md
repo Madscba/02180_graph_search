@@ -71,6 +71,20 @@ Example of `revise` command and its output:
 ==================================
 ```
 
+The `agm` command performs tests og AGM postulates:
+
+```
+> agm p - q
+Closure: False
+Success: True
+Inclusion: True
+Vacuity: True
+Consistency: True
+Extensionality: Can not be determined since (phi <-> psi) is not a tautologi
+Superexpansion: False
+Subexpansion: Can not be determined since psi negated in B*phi
+```
+
 
 ## Development
 
