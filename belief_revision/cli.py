@@ -1,4 +1,4 @@
-from kb import PL_resolution
+from kb import PL_resolution, Biconditional
 import logging
 import os
 import cmd
@@ -95,9 +95,21 @@ class Cli(cmd.Cmd):
         appended = list(set(baseline+[phi]))
         self.kb.revise(phi)
         revised = self.kb.fetch_premises()
+
+        #Load the prior KB
+        self.kb = pickle.load(open("temp.pickle","rb"))
+        self.kb.revise(psi)
+        revised_psi = self.kb.fetch_premises()
+        
+        #Load the prior KB
+        self.kb = pickle.load(open("temp.pickle","rb"))
+        #Cleanup temp file
+        os.remove("temp.pickle")
+        
         #print(baseline)
         #print(appended)
         #print(revised)
+        
         #Closure
         print("Closure: False")
         #Success
@@ -116,8 +128,14 @@ class Cli(cmd.Cmd):
         else:
             print("Consistency: Can not be determined since phi isn't consistent")
         if psi:
+            
             True
+            
             #Extensionality
+            if (not PL_resolution([],Not(Biconditional(phi,psi)))) or Biconditional(phi,psi)==True:
+                print(f'Extensionality: {set(revised)==set(revised_psi)}')
+            else:
+                print("Extensionality: Can not be determinced since (phi <-> psi) is not a tautologi")
 
             #Superexpansion
 
@@ -125,10 +143,7 @@ class Cli(cmd.Cmd):
         else:
             "No psi given for last 3 postulates"
         
-        #Load the prior KB
-        self.kb = pickle.load(open("temp.pickle","rb"))
-        #Cleanup temp file
-        os.remove("temp.pickle")
+       
 
     def do_print(self, line):
         'Print the knowledge base'
