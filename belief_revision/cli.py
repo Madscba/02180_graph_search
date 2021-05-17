@@ -95,11 +95,11 @@ class Cli(cmd.Cmd):
         appended = list(set(baseline+[phi]))
         self.kb.revise(phi)
         revised = self.kb.fetch_premises()
-        #print(baseline)
-        #print(appended)
-        #print(revised)
+        print(baseline)
+        print(appended)
+        print(revised)
         #Closure
-
+        print("Closure: False")
         #Success
         print(f'Success: {phi in revised}')
         #Inclusion
@@ -108,7 +108,7 @@ class Cli(cmd.Cmd):
         if notphi in baseline:
             print('Vacuity: Can not be determined since phi negated in B')
         else:
-            print(f'Vacuity: {revised==appended}')
+            print(f'Vacuity: {set(revised)==set(appended)}')
 
         #Consistency
         if PL_resolution([],phi):
