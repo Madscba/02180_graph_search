@@ -7,7 +7,14 @@ You can run this project either with Docker or installing dependencies and runni
 
 #### With docker
 
-...
+<details>
+  <summary>Click to expand!</summary>
+
+```bash
+cd /this-repo/belief_revision
+docker-compose run --rm beliefrevision
+```
+</details>
 
 
 #### With your local python installation
@@ -24,10 +31,10 @@ pip install --user pipenv
 With pipenv installed you are ready to install dependencies and run the program:
 
 ```bash
-cd /to/this/repo
+cd /this-repo/belief_revision
 pipenv install   # to install deps
 pipenv shell     # to enter virtualenv
-LOGLEVEL=DEBUG python cli.py   # to run the program
+python cli.py    # to run the program
 ```
 
 </details>
@@ -36,4 +43,33 @@ LOGLEVEL=DEBUG python cli.py   # to run the program
 
 ## User interface
 
-Follow on screen instructions
+The command-line interface shows the available commands and the way of formatting expressions:
+
+```
+-- Available commands: revise contract expand agm print reset quit (type "help <command>" for more information)
+-- Format for expressions: ~p (NOT), p&q (AND), p|q (OR), p>>q (IMPLICATION)
+```
+
+Use help to learn more about a command: 
+
+```
+help revise
+```
+
+Example of `revise` command and its output:
+
+```
+> revise p&q
+=============  KB  ===============
+ (1.67) (r | ~p) & (s | ~p)
+ (2.00) p | q
+ (2.00) p | ~q
+ (4.00) p & q
+==================================
+```
+
+
+## Development
+
+You can specify loglevel via environment: `LOGLEVEL=DEBUG python cli.py`
+
