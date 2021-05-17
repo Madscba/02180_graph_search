@@ -187,8 +187,8 @@ class Knowledge_base():
         premises = self.fetch_premises()
 
         if not PL_resolution(premises, sentence):
-            logging.error(f'{sentence} would introduce a contradiction in the KB, skipping.')
-            return None
+            logging.warning(f'{sentence} introduces a contradiction in the KB.')
+            # return None
 
         premises.append(sentence)
         updated_ranks = self.update_ranks_of_existing_premises(premises)
