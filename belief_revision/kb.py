@@ -182,6 +182,8 @@ class Knowledge_base():
         :param rank: rank corresponding to sentence.
         :return:
         """
+        if not is_cnf(sentence):
+            sentence = to_cnf(sentence)
         premises = self.fetch_premises()
 
         if not PL_resolution(premises, sentence):
