@@ -71,7 +71,7 @@ Example of `revise` command and its output:
 ==================================
 ```
 
-The `agm` command performs tests og AGM postulates:
+The `agm` command performs tests of AGM postulates:
 
 ```
 > agm p - q
