@@ -170,84 +170,35 @@ class Knowledge_base():
     def fetch_ranks(self):
         return [premise[1] for premise in self.premises]
 
-    def update_rank_of_existing_premise(self, sentence, rank, premises, ranks):
+    def update_ranks_of_existing_premises(self, premises):
         """
-        User tried to add a premise already in KB. User can either update it or leave it be.
-        :param sentence: premise
-        :param rank: user input rank (The potential new rank)
-        :param premises:  [premise[0] for premise in self.premises]
-        :param ranks:   [premise[1] for premise in self.premises]
-        :return:
+        Calculate ranks of premises, and return updated ranks
         """
-        premise_idx = np.where(np.array(premises) == to_cnf(sentence))[0][0]
-        logging.info("Premise is already in knowledge base with rank {}".format(ranks[premise_idx]))
-        update = input("Would you like to update the rank with {}. \n Type 'y' for yes and 'n' for no".format(rank))
-        while update not in ['y', 'n']:
-            update = input("Your input is not valid. Type 'y' for yes and 'n' for no")
-        if update == "y":
-            self.premises.remove(self.premises[premise_idx])
-            self.premises.append((sentence, rank))
+        return [self.alpha * self.count_entailment(premises,premise) + self.beta / self.count_literals(premise) for premise in premises]
 
-    def add_premise(self, sentence, rank):
+    def add_premise(self, sentence):
         """
         :param sentence: sentence to be added
         :param rank: rank corresponding to sentence.
         :return:
         """
-        assert isinstance(rank, float) or isinstance(rank, int), "rank is not of the right type: {0}".format(type(rank))
-        premises = self.fetch_premises()
-        ranks =  self.fetch_ranks()
-
         if not is_cnf(sentence):
             sentence = to_cnf(sentence)
+        premises = self.fetch_premises()
 
-        if not PL_resolution([], sentence):  # if not satisfiable = contradiction
-            logging.error(f'{sentence} is a contradiction, skipping.')
+        if not PL_resolution(premises, sentence):
+            logging.error(f'{sentence} would introduce a contradiction in the KB, skipping. Consider using revision instead.')
             return
-        # if not PL_resolution(premises, sentence):
-        #     logging.error(f'{sentence} would introduce a contradiction in the KB, skipping. Consider using revision instead.')
-        #     return
-        if sentence in premises:
-            self.update_rank_of_existing_premise(sentence,rank,premises,ranks)
-        else:
-            self.premises.append((sentence,rank))
 
-    def check_dominance(self, automatically_fix_weights=False):
-        """
-        Check to see whether premises fulfils the third epistemic postulate (Dominance):
-        if p |= q, then p <= q.
-        If p entails q, then q has larger or equal epistemic entrenchment
-        """
-        for idx_1,premise1,rank1 in enumerate(self.premises):
-            for idx_2,premise2,rank2 in enumerate(self.premises):
-                if premise1 != premise2:
-                    entails = PL_resolution(premise1,premise2)
-                    if entails:
-                        if not rank1 < rank2:
-                            if not automatically_fix_weights:
-                                logging.debug("Dominance postulate is violated")
-                                stop = self.adjust_weights_for_dominance(automatically_fix_weights,idx_1, idx_2, rank1, rank2)
-                                if stop:
-                                    return
-                            else:
-                                self.adjust_weights_for_dominance(True,idx_1,idx_2,rank1,rank2)
+        premises.append(sentence)
+        updated_ranks = self.update_ranks_of_existing_premises(premises)
+        self.premises = [(belief,rank) for belief,rank in zip(premises,updated_ranks)] #zip updated ranks and premises and store in
 
-    def adjust_weights_for_dominance(self, automatically_fix_weights, idx_1, idx_2, rank1, rank2):
-        if automatically_fix_weights == False:
-            adjust = input("Do you want to automatically adjust weights to satisfy dominance postulate.\n Type 'y' for yes and 'n' for no")
-            while adjust not in ['y', 'n']:
-                adjust = input("Your input is not valid. Type 'y' for yes and 'n' for no")
-            if adjust == 'y':
-                self.premises[idx_2][1] += abs(rank1-rank2)
-                self.check_dominance(automatically_fix_weights=True)
-            return False
-        else:
-            self.check_dominance(automatically_fix_weights=True)
 
     def count_entailment(self, original_KB, sentence):
         entailment_count = 0
         for belief in original_KB:
-            if not PL_resolution([sentence],Not(belief[0])): #If the negated belief is not satisfiable, then it must follow from the sentence.
+            if not PL_resolution([sentence],Not(belief)): #If the negated belief is not satisfiable, then it must follow from the sentence.
                 entailment_count +=1
         return entailment_count
 
@@ -295,10 +246,6 @@ class Knowledge_base():
         return set1 & set2
 
     def contract(self, formula):
-        max_remainder_length = 0
-        new_beliefs = None
-
-        original_KB = self.premises
         # remove from the KB formulas identical to the one being contracted
         self.premises[:] = [premise for premise in self.premises if premise[0] != formula]
 
@@ -315,15 +262,15 @@ class Knowledge_base():
                 raise TypeError(f'Received type {type(remainder)} instead of Iterable: {remainder}')
 
         if len(all_remainders) > 1:
-            self.premises = self.selection_function(original_KB, all_remainders)
+            self.premises = self.selection_function(self.fetch_premises(), all_remainders)
         elif len(all_remainders) == 1:
-            self.premises = self.selection_function(original_KB, [remainder, remainder])
+            self.premises = self.selection_function(self.fetch_premises(), [remainder, remainder])
         else:
             self.reset() # empty the database if no possible remainders
 
-    def revise(self, formula, rank):
+    def revise(self, formula):
         self.contract(Not(formula))
-        self.add_premise(formula, rank)
+        self.add_premise(formula)
 
     def __repr__(self):
         output = '=============  KB  ===============\n'
