@@ -92,7 +92,7 @@ class Cli(cmd.Cmd):
         pickle.dump(self.kb,open("temp.pickle","wb"))
         notphi = to_cnf(Not(phi))
         baseline = self.kb.fetch_premises()
-        appended = list(set(baseline+[phi]))
+        appended = baseline+[phi]
         self.kb.revise(phi)
         revised = self.kb.fetch_premises()
 
@@ -101,10 +101,7 @@ class Cli(cmd.Cmd):
         self.kb.revise(psi)
         revised_psi = self.kb.fetch_premises()
         
-        #Load the prior KB
-        self.kb = pickle.load(open("temp.pickle","rb"))
-        #Cleanup temp file
-        os.remove("temp.pickle")
+        
         
         #print(baseline)
         #print(appended)
@@ -128,20 +125,36 @@ class Cli(cmd.Cmd):
         else:
             print("Consistency: Can not be determined since phi isn't consistent")
         if psi:
-            
-            True
-            
+            self.kb = pickle.load(open("temp.pickle","rb"))
+            self.kb.revise(psi)
+            revised_psi = self.kb.fetch_premises()
+            appended_psi = revised + [psi]
+            self.kb = pickle.load(open("temp.pickle","rb"))
+            self.kb.revise(And(phi,psi))
+            revised_phi_psi = self.kb.fetch_premises()
+            notpsi = to_cnf(Not(psi))
+
             #Extensionality
             if (not PL_resolution([],Not(Biconditional(phi,psi)))) or Biconditional(phi,psi)==True:
+                
                 print(f'Extensionality: {set(revised)==set(revised_psi)}')
             else:
                 print("Extensionality: Can not be determinced since (phi <-> psi) is not a tautologi")
 
+        
             #Superexpansion
-
+            print(f"Superexpansion: {set(revised_phi_psi).issubset(set(appended_psi))}")
             #Subexpansion
+            if notpsi in revised:
+                print(f"Subexpansion: {set(appended_psi).issubset(set(revised_phi_psi))}")
+            else:
+                print('Subexpansion: Can not be determined since psi negated in B*phi')
         else:
             "No psi given for last 3 postulates"
+        #Load the prior KB
+        self.kb = pickle.load(open("temp.pickle","rb"))
+        #Cleanup temp file
+        os.remove("temp.pickle")
         
        
 
