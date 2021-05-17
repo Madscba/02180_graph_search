@@ -96,11 +96,6 @@ class Cli(cmd.Cmd):
         self.kb.revise(phi)
         revised = self.kb.fetch_premises()
 
-        #Load the prior KB
-        self.kb = pickle.load(open("temp.pickle","rb"))
-        self.kb.revise(psi)
-        revised_psi = self.kb.fetch_premises()
-        
         
         
         #print(baseline)
@@ -150,7 +145,7 @@ class Cli(cmd.Cmd):
             else:
                 print('Subexpansion: Can not be determined since psi negated in B*phi')
         else:
-            "No psi given for last 3 postulates"
+            print("No psi given for last 3 postulates")
         #Load the prior KB
         self.kb = pickle.load(open("temp.pickle","rb"))
         #Cleanup temp file
