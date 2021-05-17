@@ -189,6 +189,9 @@ class Knowledge_base():
         if not PL_resolution(premises, sentence):
             logging.warning(f'{sentence} introduces a contradiction in the KB.')
             # return None
+        if sentence in premises:
+            logging.warning(f'{sentence} was already part of the KB.')
+            return sentence
 
         premises.append(sentence)
         updated_ranks = self.update_ranks_of_existing_premises(premises)
