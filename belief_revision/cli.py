@@ -31,14 +31,7 @@ class Cli(cmd.Cmd):
             self.do_help('expand')
             return
         belief = sympify(line)
-        while True:
-            try:
-                rank = float(input('Enter the rank for this belief (e.g. "0.6"): '))
-            except ValueError:
-                print('Invalid number')
-            else:
-                break
-        self.kb.add_premise(belief, rank)
+        self.kb.add_premise(belief)
 
     def do_contract(self, line):
         'Remove a belief from the KB. Example: "contract p>>q"'
@@ -54,8 +47,8 @@ class Cli(cmd.Cmd):
             self.do_help('revise')
             return
         belief = sympify(line)
-
         self.kb.revise(belief)
+
     def do_agm(self,line):
         'Test the KB on AGM postulates with a phi and a psi. Split with "-". Example: "agm p>>q - q | p"'
         if not line:
@@ -96,7 +89,7 @@ class Cli(cmd.Cmd):
         if PL_resolution([],phi):
             print(f"Consistency: {PL_resolution([],revised)}")
         else:
-            print("Consistency: Can not be determined since phi isnt consistent")
+            print("Consistency: Can not be determined since phi isn't consistent")
         if psi:
             True
             #Extensionality
@@ -144,12 +137,11 @@ class Cli(cmd.Cmd):
 
     def emptyline(self):
         self.do_help('')
-        pass
 
     def preloop(self):
         print('\nInitialising Knowledge Base...\n')
-        for belief, rank in generate_initial_beliefs():
-            self.kb.revise(belief, rank)
+        for belief in generate_initial_beliefs():
+            self.kb.revise(belief)
         print(self.kb)
         self.do_help('')
 
@@ -157,7 +149,6 @@ class Cli(cmd.Cmd):
         return line
 
     def postcmd(self, stop, line):
-        # print(f'postcmd: line={line}')
         return stop
 
     def postloop(self):
@@ -169,9 +160,9 @@ def generate_initial_beliefs():
     """Example premises is from exercises from lecture 9"""
     p, q, s, r = symbols("p q s r")
     return [
-        (Implies(Not(p), q), 2.0),
-        (Implies(q, p), 2.0),
-        (Implies(p, And(r, s)), 1.67)
+        Implies(Not(p), q),
+        Implies(q, p),
+        Implies(p, And(r, s))
     ]
     # beliefs = [to_cnf(belief) for belief in beliefs]
     # temp_ranks = np.arange(5)
