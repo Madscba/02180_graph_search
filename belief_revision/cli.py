@@ -9,7 +9,7 @@ from sympy import symbols
 from sympy.core.sympify import sympify
 from sympy.logic.boolalg import And, Or, Not, Implies, to_cnf
 
-from kb import Knowledge_base
+from kb import Knowledge_base, PL_resolution
 
 logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO"),
@@ -30,7 +30,14 @@ class Cli(cmd.Cmd):
         if not line:
             self.do_help('expand')
             return
-        belief = sympify(line)
+        try:
+            belief = sympify(line)
+        except ValueError as exc:
+            print(exc)
+            return
+        if not PL_resolution([], belief):
+            print(f'{belief} is a contradiction, skipping')
+            return
         self.kb.add_premise(belief)
         self.do_print(line)
 
@@ -39,7 +46,11 @@ class Cli(cmd.Cmd):
         if not line:
             self.do_help('contract')
             return
-        belief = sympify(line)
+        try:
+            belief = sympify(line)
+        except ValueError as exc:
+            print(exc)
+            return
         self.kb.contract(belief)
         self.do_print(line)
 
@@ -48,7 +59,14 @@ class Cli(cmd.Cmd):
         if not line:
             self.do_help('revise')
             return
-        belief = sympify(line)
+        try:
+            belief = sympify(line)
+        except ValueError as exc:
+            print(exc)
+            return
+        if not PL_resolution([], belief):
+            print(f'{belief} is a contradiction, skipping')
+            return
         self.kb.revise(belief)
         self.do_print(line)
 
@@ -59,19 +77,23 @@ class Cli(cmd.Cmd):
             return
         #Save KB
         line = line.split("-")
-        if len(line)==1:
-            phi = to_cnf(sympify(line[0]))
-            psi = False
-        elif len(line)==2:
-            phi = to_cnf(sympify(line[0]))
-            psi = to_cnf(sympify(line[1]))
-        else:
-            print("More than two inputs")
+        try:
+            if len(line)==1:
+                phi = to_cnf(sympify(line[0]))
+                psi = False
+            elif len(line)==2:
+                phi = to_cnf(sympify(line[0]))
+                psi = to_cnf(sympify(line[1]))
+            else:
+                print("More than two inputs")
+        except ValueError as exc:
+            print(exc)
+            return
         pickle.dump(self.kb,open("temp.pickle","wb"))
         notphi = to_cnf(Not(phi))
         baseline = self.kb.fetch_premises()
         appended = list(set(baseline+[phi]))
-        self.kb.revise(phi,1)
+        self.kb.revise(phi)
         revised = self.kb.fetch_premises()
         #print(baseline)
         #print(appended)
@@ -149,6 +171,7 @@ class Cli(cmd.Cmd):
         self.do_help('')
 
     def precmd(self, line):
+        # if line and line[0] in []
         return line
 
     def postcmd(self, stop, line):
